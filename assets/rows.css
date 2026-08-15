@@ -62,7 +62,7 @@
  * Mobile
  * -------------------------------- */
 
-@media (max-width: 600px) {
+@media (max-width: 1000px) {
 
     .rd3-content-row.rd3-row-inline {
         flex-direction: column;
