@@ -769,6 +769,194 @@ add_action(
     'rd3_row_copy_shortcode_script'
 );
 
+/*
+ * Add Used On column to Rows.
+ */
+function rd3_row_used_on_column(
+    $columns
+) {
+
+    $columns['rd3_used_on'] =
+        'Used On';
+
+    return $columns;
+}
+
+add_filter(
+    'manage_rd3_row_posts_columns',
+    'rd3_row_used_on_column'
+);
+
+
+/*
+ * Display Row usage.
+ */
+function rd3_row_used_on_column_content(
+    $column,
+    $post_id
+) {
+
+    if (
+        'rd3_used_on' !== $column
+    ) {
+        return;
+    }
+
+
+    
+
+    $usage =
+        rd3_get_row_usage(
+            $post_id
+  
+            );
+update_post_meta(
+    $post_id,
+    '_rd3_usage_count',
+    count( $usage )
+);
+
+    if (
+        empty( $usage )
+    ) {
+
+        echo '<span style="color:#777;">';
+        echo 'Not currently used';
+        echo '</span>';
+
+        return;
+    }
+
+
+    foreach (
+        $usage as $item
+    ) {
+
+        if (
+            ! empty(
+                $item['edit_url']
+            )
+        ) {
+
+            echo '<a href="';
+
+            echo esc_url(
+                $item['edit_url']
+            );
+
+            echo '">';
+
+            echo esc_html(
+                $item['title']
+            );
+
+            echo '</a>';
+
+        } else {
+
+            echo esc_html(
+                $item['title']
+            );
+        }
+
+
+        echo '<br>';
+
+
+        echo '<small>';
+
+        echo esc_html(
+            $item['type_label']
+        );
+
+
+        if (
+            isset(
+                $item['usage_type']
+            )
+        ) {
+
+            echo ' — ';
+
+            echo esc_html(
+                $item['usage_type']
+            );
+        }
+
+
+        echo '</small>';
+
+        echo '<br><br>';
+    }
+}
+
+
+add_action(
+    'manage_rd3_row_posts_custom_column',
+    'rd3_row_used_on_column_content',
+    10,
+    2
+);
+
+
+/*
+ * Make Used On column sortable.
+ */
+function rd3_row_used_on_sortable( $columns ) {
+
+    $columns['rd3_used_on'] = 'rd3_used_on';
+
+    return $columns;
+}
+
+add_filter(
+    'manage_edit-rd3_row_sortable_columns',
+    'rd3_row_used_on_sortable'
+);
+
+
+/*
+ * Sort Rows by usage count.
+ */
+function rd3_row_used_on_orderby( $query ) {
+
+    if (
+        ! is_admin() ||
+        ! $query->is_main_query()
+    ) {
+        return;
+    }
+
+    if (
+        'rd3_row' !==
+        $query->get( 'post_type' )
+    ) {
+        return;
+    }
+
+    if (
+        'rd3_used_on' !==
+        $query->get( 'orderby' )
+    ) {
+        return;
+    }
+
+    $query->set(
+        'meta_key',
+        '_rd3_usage_count'
+    );
+
+    $query->set(
+        'orderby',
+        'meta_value_num'
+    );
+}
+
+add_action(
+    'pre_get_posts',
+    'rd3_row_used_on_orderby'
+);
+
 
 /*
  * Prevent an RD3 Row from being saved

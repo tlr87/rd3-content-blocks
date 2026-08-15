@@ -238,6 +238,311 @@ add_action(
 );
 
 
+/*
+ * Add Used On column to Content Blocks.
+ */
+function rd3_content_block_used_on_column(
+    $columns
+) {
+
+    $columns['rd3_used_on'] =
+        'Used On';
+
+    return $columns;
+}
+
+add_filter(
+    'manage_rd3_content_block_posts_columns',
+    'rd3_content_block_used_on_column'
+);
+
+
+/*
+ * Display Content Block usage.
+ */
+function rd3_content_block_used_on_column_content(
+    $column,
+    $post_id
+) {
+
+    if (
+        'rd3_used_on' !== $column
+    ) {
+        return;
+    }
+
+
+    $usage =
+        rd3_get_block_usage(
+            $post_id
+        );
+
+
+    if (
+        empty( $usage )
+    ) {
+
+        echo '<span style="color:#777;">';
+        echo 'Not currently used';
+        echo '</span>';
+
+        return;
+    }
+
+
+    foreach (
+        $usage as $item
+    ) {
+
+        if (
+            ! empty(
+                $item['edit_url']
+            )
+        ) {
+
+            echo '<a href="';
+
+            echo esc_url(
+                $item['edit_url']
+            );
+
+            echo '">';
+
+            echo esc_html(
+                $item['title']
+            );
+
+            echo '</a>';
+
+        } else {
+
+            echo esc_html(
+                $item['title']
+            );
+        }
+
+
+        echo '<br>';
+
+
+        echo '<small>';
+
+        echo esc_html(
+            $item['type_label']
+        );
+
+
+        if (
+            isset(
+                $item['usage_type']
+            )
+        ) {
+
+            echo ' — ';
+
+            echo esc_html(
+                $item['usage_type']
+            );
+        }
+
+
+        if (
+            'Via Row' ===
+            $item['usage_type']
+            &&
+            ! empty(
+                $item['row_title']
+            )
+        ) {
+
+            echo ': ';
+
+            echo esc_html(
+                $item['row_title']
+            );
+        }
+
+
+        echo '</small>';
+
+        echo '<br><br>';
+    }
+}
+
+add_action(
+    'manage_rd3_content_block_posts_custom_column',
+    'rd3_content_block_used_on_column_content',
+    10,
+    2
+);
+
+
+/*
+ * Make Used On column sortable.
+ */
+function rd3_content_block_used_on_sortable(
+    $columns
+) {
+
+    $columns['rd3_used_on'] =
+        'rd3_used_on';
+
+    return $columns;
+}
+
+add_filter(
+    'manage_edit-rd3_content_block_sortable_columns',
+    'rd3_content_block_used_on_sortable'
+);
+
+
+/*
+ * Sort Content Blocks alphabetically
+ * by the first Used On title.
+ */
+function rd3_content_block_used_on_orderby(
+    $query
+) {
+
+    if (
+        ! is_admin() ||
+        ! $query->is_main_query()
+    ) {
+        return;
+    }
+
+
+    if (
+        'rd3_content_block' !==
+        $query->get( 'post_type' )
+    ) {
+        return;
+    }
+
+
+    if (
+        'rd3_used_on' !==
+        $query->get( 'orderby' )
+    ) {
+        return;
+    }
+
+
+    /*
+     * Get all Content Blocks.
+     */
+    $blocks =
+        get_posts(
+            array(
+                'post_type'      => 'rd3_content_block',
+                'post_status'    => 'any',
+                'posts_per_page' => -1,
+                'fields'         => 'ids',
+                'no_found_rows'  => true,
+            )
+        );
+
+
+    foreach (
+        $blocks as $block_id
+    ) {
+
+        $usage =
+            rd3_get_block_usage(
+                $block_id
+            );
+
+
+        $titles =
+            array();
+
+
+        /*
+         * Collect every page/post title.
+         */
+        foreach (
+            $usage as $item
+        ) {
+
+            if (
+                empty(
+                    $item['title']
+                )
+            ) {
+                continue;
+            }
+
+
+            $titles[] =
+                wp_strip_all_tags(
+                    $item['title']
+                );
+        }
+
+
+        /*
+         * Find the alphabetically first
+         * page/post title.
+         */
+        if (
+            ! empty( $titles )
+        ) {
+
+            natcasesort(
+                $titles
+            );
+
+
+            $titles =
+                array_values(
+                    $titles
+                );
+
+
+            $sort_title =
+                $titles[0];
+
+        } else {
+
+            /*
+             * Unused blocks go to the end.
+             */
+            $sort_title =
+                'ZZZZZZZZZZ';
+        }
+
+
+        /*
+         * Store the alphabetical
+         * sorting value.
+         */
+        update_post_meta(
+            $block_id,
+            '_rd3_used_on_sort',
+            $sort_title
+        );
+    }
+
+
+    /*
+     * Sort by the stored title.
+     */
+    $query->set(
+        'meta_key',
+        '_rd3_used_on_sort'
+    );
+
+
+    $query->set(
+        'orderby',
+        'meta_value'
+    );
+}
+
+add_action(
+    'pre_get_posts',
+    'rd3_content_block_used_on_orderby'
+);
 
 
 /*

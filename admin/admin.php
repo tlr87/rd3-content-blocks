@@ -36,6 +36,10 @@ require_once plugin_dir_path( __FILE__ ) . 'usage.php';
  */
 function rd3_content_blocks_admin_menu() {
 
+
+    /*
+     * Main RD3 Content Blocks menu.
+     */
     add_menu_page(
         'RD3 Content Blocks',
         'RD3 Content Blocks',
@@ -45,6 +49,10 @@ function rd3_content_blocks_admin_menu() {
         'dashicons-screenoptions',
         30
     );
+
+
+
+
 
     /*
      * How to Use.
@@ -69,51 +77,16 @@ add_action(
 
 /*
  * Main RD3 Content Blocks admin page.
+ *
+ * Redirect to Content Blocks.
  */
 function rd3_content_blocks_admin_page() {
 
-    ?>
+    wp_safe_redirect(
+        admin_url(
+            'edit.php?post_type=rd3_content_block'
+        )
+    );
 
-    <div class="wrap">
-
-        <h1>
-            RD3 Content Blocks
-        </h1>
-
-        <p>
-            Manage reusable Content Blocks
-            and Rows for the RD3 website.
-        </p>
-
-        <p>
-
-            <a
-                href="<?php echo esc_url(
-                    admin_url(
-                        'edit.php?post_type=rd3_content_block'
-                    )
-                ); ?>"
-                class="button button-primary"
-            >
-                Content Blocks
-            </a>
-
-
-            <a
-                href="<?php echo esc_url(
-                    admin_url(
-                        'edit.php?post_type=rd3_row'
-                    )
-                ); ?>"
-                class="button"
-                style="margin-left:8px;"
-            >
-                Rows
-            </a>
-
-        </p>
-
-    </div>
-
-    <?php
+    exit;
 }
