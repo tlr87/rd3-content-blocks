@@ -20,6 +20,12 @@ require_once plugin_dir_path( __FILE__ ) . 'rows.php';
 
 
 /*
+ * Load Advanced Rows administration.
+ */
+require_once plugin_dir_path( __FILE__ ) . 'adv-rows.php';
+
+
+/*
  * Load Classic Editor integration.
  */
 require_once plugin_dir_path( __FILE__ ) . 'editor.php';
@@ -30,12 +36,10 @@ require_once plugin_dir_path( __FILE__ ) . 'editor.php';
  */
 require_once plugin_dir_path( __FILE__ ) . 'usage.php';
 
-
 /*
  * Register RD3 Content Blocks admin menu.
  */
 function rd3_content_blocks_admin_menu() {
-
 
     /*
      * Main RD3 Content Blocks menu.
@@ -51,9 +55,6 @@ function rd3_content_blocks_admin_menu() {
     );
 
 
-
-
-
     /*
      * How to Use.
      */
@@ -66,7 +67,6 @@ function rd3_content_blocks_admin_menu() {
         'rd3_content_blocks_usage_page'
     );
 }
-
 
 add_action(
     'admin_menu',

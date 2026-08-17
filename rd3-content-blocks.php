@@ -9,6 +9,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
 function rd3_content_blocks_enqueue_styles() {
 
     wp_enqueue_style(
