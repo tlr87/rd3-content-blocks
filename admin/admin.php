@@ -24,6 +24,11 @@ require_once plugin_dir_path( __FILE__ ) . 'rows.php';
  */
 require_once plugin_dir_path( __FILE__ ) . 'adv-rows.php';
 
+/*
+ * Load Advanced Row Page/Post selector.
+ */
+require_once plugin_dir_path( __FILE__ ) . 'advanced-row-page-selector.php';
+
 
 /*
  * Load Classic Editor integration.
