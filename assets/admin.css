@@ -35,7 +35,7 @@
     padding-top: 20px;
 }
 /* =========================================================
-   RD3 ROW EDIT
+   RD3 ROW EDIT LINK
    ========================================================= */
 
 .rd3-content-row-wrapper {
@@ -47,22 +47,28 @@
     margin-bottom: 10px;
 }
 
-.rd3-content-row-edit a {
-    display: inline-block;
+/* =========================================================
+   RD3 ROW AND BLOCK BUTTON
+   ========================================================= */
 
-    padding: 6px 10px;
+   .rd3-content-block-edit a, .rd3-content-row-edit a {
+    display: inline-block;
+    padding: 4px 10px;
 
     background: #000;
     color: #fff;
 
     border: 1px solid #000;
+    border-radius: 3px;
 
-    font-size: 14px;
-    line-height: 1.2;
+    font-size: 12px;
+    line-height: 1.4;
+
     text-decoration: none;
+    transition: background 0.3s ease-in, color 0.3s ease-in, transform 0.3s ease-in;
 }
 
-.rd3-content-row-edit a:hover {
+.rd3-content-block-edit a:hover, .rd3-content-row-edit a:hover {
     background: #fff;
     color: #000;
 }
