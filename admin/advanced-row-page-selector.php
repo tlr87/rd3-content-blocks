@@ -83,8 +83,8 @@ function rd3_advanced_row_editor_meta_box() {
 			'post',
 			'page',
 		),
-		'side',
-		'high'
+        'normal',
+        'low'
 	);
 }
 
@@ -134,15 +134,24 @@ function rd3_advanced_row_editor_meta_box_callback( $post ) {
 
 	?>
 
-	<p>
-		Use these checkboxes to turn the Content Blocks
-		in this page's Advanced Row on or off.
-	</p>
+<p>
+	<strong>Advanced Row</strong>
+</p>
 
-	<p>
-		Changes are made to the Advanced Row shortcode
-		in this page only.
-	</p>
+<p>
+	Add an Advanced Row shortcode to this page to enable the controls below.
+</p>
+
+<p>
+	After adding or changing the shortcode, click
+	<strong>Publish</strong> or <strong>Save Draft</strong>
+	to update the page.
+</p>
+
+<p>
+	Use the checkboxes below to turn individual Content Blocks
+	on or off for this page.
+</p>
 
 	<?php
 

@@ -35,6 +35,12 @@ require_once plugin_dir_path( __FILE__ ) . 'advanced-row-page-selector.php';
  */
 require_once plugin_dir_path( __FILE__ ) . 'editor.php';
 
+/*
+ * Load How to Use administration.
+ */
+require_once plugin_dir_path( __FILE__ ) . 'help.php';
+
+
 
 /*
  * Load Usage / Help administration.
