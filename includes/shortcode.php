@@ -5,12 +5,14 @@
  * Content Block, Row and Advanced Row shortcodes.
  */
 
+
 /*
  * ============================================================
  * CONTENT BLOCK
  * ============================================================
  */
 function rd3_content_block_shortcode( $atts ) {
+
 	$atts = shortcode_atts(
 		array(
 			'id' => 0,
@@ -35,6 +37,7 @@ function rd3_content_block_shortcode( $atts ) {
 		return '';
 	}
 
+
 	/*
 	 * Prevent Content Blocks containing another Content Block.
 	 */
@@ -42,9 +45,62 @@ function rd3_content_block_shortcode( $atts ) {
 		return '';
 	}
 
-	return do_shortcode( $content );
+
+	/*
+	 * Render Content Block content.
+	 */
+	$output = do_shortcode( $content );
+
+
+	/*
+	 * Add Edit link for logged-in users
+	 * who can edit this Content Block.
+	 */
+	if (
+		is_user_logged_in()
+		&&
+		current_user_can(
+			'edit_post',
+			$block_id
+		)
+	) {
+
+		$edit_url = get_edit_post_link(
+			$block_id,
+			''
+		);
+
+
+		if ( $edit_url ) {
+
+			$output .=
+				'<div class="rd3-content-block-edit">';
+
+			$output .=
+				'<a href="' .
+				esc_url( $edit_url ) .
+				'">';
+
+			$output .=
+				'Edit Content Block';
+
+			$output .=
+				'</a>';
+
+			$output .=
+				'</div>';
+		}
+	}
+
+
+	return $output;
 }
-add_shortcode( 'rd3_block', 'rd3_content_block_shortcode' );
+
+
+add_shortcode(
+	'rd3_block',
+	'rd3_content_block_shortcode'
+);
 
 
 /*
@@ -53,6 +109,7 @@ add_shortcode( 'rd3_block', 'rd3_content_block_shortcode' );
  * ============================================================
  */
 function rd3_row_shortcode( $atts ) {
+
 	$atts = shortcode_atts(
 		array(
 			'id' => 0,
@@ -71,49 +128,119 @@ function rd3_row_shortcode( $atts ) {
 		return '';
 	}
 
-	$layout = get_post_meta( $row_id, '_rd3_row_layout', true );
 
-	if ( ! in_array( $layout, array( 'inline', 'stacked' ), true ) ) {
+	$layout = get_post_meta(
+		$row_id,
+		'_rd3_row_layout',
+		true
+	);
+
+
+	if (
+		! in_array(
+			$layout,
+			array(
+				'inline',
+				'stacked',
+			),
+			true
+		)
+	) {
+
 		$layout = 'inline';
 	}
 
-	$positions = get_post_meta( $row_id, '_rd3_row_positions', true );
 
-	if ( ! is_array( $positions ) || empty( $positions ) ) {
+	$positions = get_post_meta(
+		$row_id,
+		'_rd3_row_positions',
+		true
+	);
+
+
+	if (
+		! is_array( $positions )
+		||
+		empty( $positions )
+	) {
+
 		return '';
 	}
 
-	ksort( $positions, SORT_NUMERIC );
 
-	$output = '<div class="rd3-content-row rd3-row-' . esc_attr( $layout ) . '">';
+	ksort(
+		$positions,
+		SORT_NUMERIC
+	);
 
-	foreach ( $positions as $position => $block_id ) {
+
+	$output =
+		'<div class="rd3-content-row rd3-row-' .
+		esc_attr( $layout ) .
+		'">';
+
+
+	foreach (
+		$positions as $position => $block_id
+	) {
+
 		$block_id = absint( $block_id );
+
 
 		if ( ! $block_id ) {
 			continue;
 		}
 
-		if ( 'rd3_content_block' !== get_post_type( $block_id ) ) {
+
+		if (
+			'rd3_content_block'
+			!== get_post_type( $block_id )
+		) {
+
 			continue;
 		}
 
-		$block_content = do_shortcode( '[rd3_block id="' . $block_id . '"]' );
 
-		if ( '' === trim( $block_content ) ) {
+		$block_content =
+			do_shortcode(
+				'[rd3_block id="' .
+				$block_id .
+				'"]'
+			);
+
+
+		if (
+			'' === trim(
+				$block_content
+			)
+		) {
+
 			continue;
 		}
 
-		$output .= '<div class="rd3-content-row-item">';
-		$output .= $block_content;
-		$output .= '</div>';
+
+		$output .=
+			'<div class="rd3-content-row-item">';
+
+		$output .=
+			$block_content;
+
+		$output .=
+			'</div>';
 	}
+
 
 	$output .= '</div>';
 
+
 	return $output;
 }
-add_shortcode( 'rd3_row', 'rd3_row_shortcode' );
+
+
+add_shortcode(
+	'rd3_row',
+	'rd3_row_shortcode'
+);
 
 
 /*
@@ -128,6 +255,7 @@ add_shortcode( 'rd3_row', 'rd3_row_shortcode' );
  */
 function rd3_advanced_row_shortcode( $atts ) {
 
+
 	/*
 	 * Advanced Row uses dynamic attributes.
 	 *
@@ -135,7 +263,12 @@ function rd3_advanced_row_shortcode( $atts ) {
 	 * [rd3_advanced_row brok="1" bett="1" prot="1" mana="1"]
 	 */
 
-	if ( empty( $atts ) || ! is_array( $atts ) ) {
+	if (
+		empty( $atts )
+		||
+		! is_array( $atts )
+	) {
+
 		return '';
 	}
 
@@ -145,16 +278,23 @@ function rd3_advanced_row_shortcode( $atts ) {
 	 */
 	$clean_atts = array();
 
-	foreach ( $atts as $key => $value ) {
 
-		$clean_atts[ sanitize_key( $key ) ] = $value;
+	foreach (
+		$atts as $key => $value
+	) {
+
+		$clean_atts[
+			sanitize_key( $key )
+		] = $value;
 	}
+
 
 	$atts = $clean_atts;
 
 
 	/*
-	 * Find the Advanced Row containing one of these IDs.
+	 * Find the Advanced Row containing
+	 * one of these IDs.
 	 */
 	$advanced_rows = get_posts(
 		array(
@@ -173,10 +313,13 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	$matched_blocks = array();
+
 	$matched_row_id = 0;
 
 
-	foreach ( $advanced_rows as $advanced_row ) {
+	foreach (
+		$advanced_rows as $advanced_row
+	) {
 
 		$saved_blocks = get_post_meta(
 			$advanced_row->ID,
@@ -185,7 +328,12 @@ function rd3_advanced_row_shortcode( $atts ) {
 		);
 
 
-		if ( ! is_array( $saved_blocks ) ) {
+		if (
+			! is_array(
+				$saved_blocks
+			)
+		) {
+
 			continue;
 		}
 
@@ -193,9 +341,16 @@ function rd3_advanced_row_shortcode( $atts ) {
 		$candidate_blocks = array();
 
 
-		foreach ( $saved_blocks as $position => $block ) {
+		foreach (
+			$saved_blocks as $position => $block
+		) {
 
-			if ( ! is_array( $block ) ) {
+			if (
+				! is_array(
+					$block
+				)
+			) {
+
 				continue;
 			}
 
@@ -230,7 +385,8 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 			if (
 				'rd3_content_block'
-				!== get_post_type(
+				!==
+				get_post_type(
 					$block_id
 				)
 			) {
@@ -239,7 +395,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 			}
 
 
-			$candidate_blocks[ $shortcode_id ] = array(
+			$candidate_blocks[
+				$shortcode_id
+			] = array(
 
 				'position' =>
 					absint(
@@ -248,20 +406,23 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 				'block_id' =>
 					$block_id,
-
 			);
 		}
 
 
 		/*
-		 * Does this Advanced Row contain one
-		 * of the shortcode IDs supplied?
+		 * Does this Advanced Row contain
+		 * one of the shortcode IDs supplied?
 		 */
-		foreach ( $atts as $attribute => $value ) {
+		foreach (
+			$atts as $attribute => $value
+		) {
 
 			if (
 				isset(
-					$candidate_blocks[ $attribute ]
+					$candidate_blocks[
+						$attribute
+					]
 				)
 			) {
 
@@ -316,13 +477,15 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Sort blocks by their position.
+	 * Sort blocks by position.
 	 */
 	uasort(
 		$matched_blocks,
 		function( $a, $b ) {
 
-			return $a['position'] <=> $b['position'];
+			return $a['position']
+				<=>
+				$b['position'];
 		}
 	);
 
@@ -350,14 +513,20 @@ function rd3_advanced_row_shortcode( $atts ) {
 		$matched_blocks as $shortcode_id => $block
 	) {
 
+
 		/*
 		 * Attribute not supplied = hidden.
 		 */
 		$show =
 			isset(
-				$atts[ $shortcode_id ]
+				$atts[
+					$shortcode_id
+				]
 			)
-				? (string) $atts[ $shortcode_id ]
+				? (string)
+					$atts[
+						$shortcode_id
+					]
 				: '0';
 
 
@@ -385,6 +554,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 		/*
 		 * Render Content Block.
+		 *
+		 * The Content Block shortcode handles
+		 * the logged-in Edit link.
 		 */
 		$block_content =
 			do_shortcode(
@@ -423,9 +595,12 @@ function rd3_advanced_row_shortcode( $atts ) {
 	 */
 	if (
 		'<div class="' .
-		esc_attr( $row_class ) .
+		esc_attr(
+			$row_class
+		) .
 		'"></div>'
-		=== $output
+		===
+		$output
 	) {
 
 		return '';

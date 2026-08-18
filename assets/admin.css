@@ -1,0 +1,38 @@
+/* =========================================================
+   RD3 CONTENT BLOCK EDIT LINK
+   ========================================================= */
+
+.rd3-content-block-edit a {
+    display: inline-block;
+    padding: 4px 10px;
+
+    background: #000;
+    color: #fff;
+
+    border: 1px solid #000;
+    border-radius: 3px;
+
+    font-size: 12px;
+    line-height: 1.4;
+
+    text-decoration: none;
+     transition-duration: 0.3s;
+     transition-timing-function: ease-in;
+}
+
+.rd3-content-block-edit a:hover {
+    background: #fff;
+    color: #000;
+    transition: transform 0.3s ease-in;
+}
+
+
+.rd3-content-row-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.rd3-content-block-edit {
+    margin-top: auto;
+    padding-top: 20px;
+}

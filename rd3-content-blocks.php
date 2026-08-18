@@ -19,6 +19,14 @@ function rd3_content_blocks_enqueue_styles() {
         array(),
         '1.0.0'
     );
+
+    wp_enqueue_style(
+        'rd3-content-blocks-admin',
+        plugin_dir_url( __FILE__ ) .
+        'assets/admin.css',
+        array(),
+        '1.0.0'
+    );
 }
 
 add_action(
