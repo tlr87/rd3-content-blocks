@@ -31,7 +31,10 @@ function rd3_content_block_shortcode( $atts ) {
 		return '';
 	}
 
-	$content = get_post_field( 'post_content', $block_id );
+	$content = get_post_field(
+		'post_content',
+		$block_id
+	);
 
 	if ( '' === trim( $content ) ) {
 		return '';
@@ -39,7 +42,8 @@ function rd3_content_block_shortcode( $atts ) {
 
 
 	/*
-	 * Prevent Content Blocks containing another Content Block.
+	 * Prevent Content Blocks containing
+	 * another Content Block.
 	 */
 	if ( has_shortcode( $content, 'rd3_block' ) ) {
 		return '';
@@ -69,7 +73,6 @@ function rd3_content_block_shortcode( $atts ) {
 			$block_id,
 			''
 		);
-
 
 		if ( $edit_url ) {
 
@@ -129,12 +132,14 @@ function rd3_row_shortcode( $atts ) {
 	}
 
 
+	/*
+	 * Get Row layout.
+	 */
 	$layout = get_post_meta(
 		$row_id,
 		'_rd3_row_layout',
 		true
 	);
-
 
 	if (
 		! in_array(
@@ -151,12 +156,14 @@ function rd3_row_shortcode( $atts ) {
 	}
 
 
+	/*
+	 * Get Row positions.
+	 */
 	$positions = get_post_meta(
 		$row_id,
 		'_rd3_row_positions',
 		true
 	);
-
 
 	if (
 		! is_array( $positions )
@@ -174,23 +181,73 @@ function rd3_row_shortcode( $atts ) {
 	);
 
 
+	/*
+	 * Create outer wrapper.
+	 */
 	$output =
+		'<div class="rd3-content-row-wrapper">';
+
+
+	/*
+	 * Add Edit Row link.
+	 */
+	if (
+		is_user_logged_in()
+		&&
+		current_user_can(
+			'edit_post',
+			$row_id
+		)
+	) {
+
+		$edit_url = get_edit_post_link(
+			$row_id,
+			''
+		);
+
+		if ( $edit_url ) {
+
+			$output .=
+				'<div class="rd3-content-row-edit">';
+
+			$output .=
+				'<a href="' .
+				esc_url( $edit_url ) .
+				'">';
+
+			$output .=
+				'Edit Row';
+
+			$output .=
+				'</a>';
+
+			$output .=
+				'</div>';
+		}
+	}
+
+
+	/*
+	 * Create actual Row.
+	 */
+	$output .=
 		'<div class="rd3-content-row rd3-row-' .
 		esc_attr( $layout ) .
 		'">';
 
 
+	/*
+	 * Render Content Blocks.
+	 */
 	foreach (
 		$positions as $position => $block_id
 	) {
 
 		$block_id = absint( $block_id );
 
-
 		if ( ! $block_id ) {
 			continue;
 		}
-
 
 		if (
 			'rd3_content_block'
@@ -201,6 +258,12 @@ function rd3_row_shortcode( $atts ) {
 		}
 
 
+		/*
+		 * Render Content Block.
+		 *
+		 * The Content Block shortcode handles
+		 * its own Edit Content Block link.
+		 */
 		$block_content =
 			do_shortcode(
 				'[rd3_block id="' .
@@ -230,6 +293,15 @@ function rd3_row_shortcode( $atts ) {
 	}
 
 
+	/*
+	 * Close actual Row.
+	 */
+	$output .= '</div>';
+
+
+	/*
+	 * Close outer wrapper.
+	 */
 	$output .= '</div>';
 
 
@@ -258,11 +330,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 	/*
 	 * Advanced Row uses dynamic attributes.
-	 *
-	 * Example:
-	 * [rd3_advanced_row brok="1" bett="1" prot="1" mana="1"]
 	 */
-
 	if (
 		empty( $atts )
 		||
@@ -293,8 +361,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Find the Advanced Row containing
-	 * one of these IDs.
+	 * Find Advanced Rows.
 	 */
 	$advanced_rows = get_posts(
 		array(
@@ -317,6 +384,10 @@ function rd3_advanced_row_shortcode( $atts ) {
 	$matched_row_id = 0;
 
 
+	/*
+	 * Find the Advanced Row containing
+	 * one of the supplied shortcode IDs.
+	 */
 	foreach (
 		$advanced_rows as $advanced_row
 	) {
@@ -412,7 +483,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 		/*
 		 * Does this Advanced Row contain
-		 * one of the shortcode IDs supplied?
+		 * one of the supplied shortcode IDs?
 		 */
 		foreach (
 			$atts as $attribute => $value
@@ -449,7 +520,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Get the saved layout.
+	 * Get saved layout.
 	 */
 	$layout = get_post_meta(
 		$matched_row_id,
@@ -491,14 +562,64 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Create row class.
+	 * Create Row class.
 	 */
 	$row_class =
 		'rd3-content-row rd3-advanced-row rd3-row-' .
 		$layout;
 
 
+	/*
+	 * Create outer wrapper.
+	 */
 	$output =
+		'<div class="rd3-content-row-wrapper">';
+
+
+	/*
+	 * Add Edit Advanced Row link.
+	 */
+	if (
+		is_user_logged_in()
+		&&
+		current_user_can(
+			'edit_post',
+			$matched_row_id
+		)
+	) {
+
+		$edit_url = get_edit_post_link(
+			$matched_row_id,
+			''
+		);
+
+
+		if ( $edit_url ) {
+
+			$output .=
+				'<div class="rd3-content-row-edit">';
+
+			$output .=
+				'<a href="' .
+				esc_url( $edit_url ) .
+				'">';
+
+			$output .=
+				'Edit Advanced Row';
+
+			$output .=
+				'</a>';
+
+			$output .=
+				'</div>';
+		}
+	}
+
+
+	/*
+	 * Create actual Advanced Row.
+	 */
+	$output .=
 		'<div class="' .
 		esc_attr(
 			$row_class
@@ -507,7 +628,13 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Render selected blocks.
+	 * Track whether anything was rendered.
+	 */
+	$has_content = false;
+
+
+	/*
+	 * Render selected Content Blocks.
 	 */
 	foreach (
 		$matched_blocks as $shortcode_id => $block
@@ -554,9 +681,6 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 		/*
 		 * Render Content Block.
-		 *
-		 * The Content Block shortcode handles
-		 * the logged-in Edit link.
 		 */
 		$block_content =
 			do_shortcode(
@@ -576,6 +700,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 		}
 
 
+		$has_content = true;
+
+
 		$output .=
 			'<div class="rd3-content-row-item">';
 
@@ -587,24 +714,24 @@ function rd3_advanced_row_shortcode( $atts ) {
 	}
 
 
+	/*
+	 * Don't output an empty Advanced Row.
+	 */
+	if ( ! $has_content ) {
+		return '';
+	}
+
+
+	/*
+	 * Close actual Advanced Row.
+	 */
 	$output .= '</div>';
 
 
 	/*
-	 * Don't output an empty row.
+	 * Close outer wrapper.
 	 */
-	if (
-		'<div class="' .
-		esc_attr(
-			$row_class
-		) .
-		'"></div>'
-		===
-		$output
-	) {
-
-		return '';
-	}
+	$output .= '</div>';
 
 
 	return $output;
