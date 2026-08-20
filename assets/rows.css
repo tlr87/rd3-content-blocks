@@ -9,8 +9,11 @@
  * -------------------------------- */
 
 .rd3-content-row {
+
     width: 100%;
+
     box-sizing: border-box;
+
 }
 
 
@@ -19,7 +22,9 @@
  * -------------------------------- */
 
 .rd3-content-row-item {
+    padding: 0;
     box-sizing: border-box;
+
 }
 
 
@@ -28,16 +33,29 @@
  * -------------------------------- */
 
 .rd3-content-row.rd3-row-inline {
+
     display: flex;
+
     flex-wrap: nowrap;
+
     gap: 20px;
+
+    align-items: stretch;
+
 }
 
 
 .rd3-content-row.rd3-row-inline
 .rd3-content-row-item {
+
     flex: 1 1 0;
+
     min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
 }
 
 
@@ -46,15 +64,73 @@
  * -------------------------------- */
 
 .rd3-content-row.rd3-row-stacked {
+
     display: flex;
+
     flex-direction: column;
+
     gap: 20px;
+
 }
 
 
 .rd3-content-row.rd3-row-stacked
 .rd3-content-row-item {
+
     width: 100%;
+
+}
+
+
+/* --------------------------------
+ * Content Block
+ * -------------------------------- */
+
+.rd3-content-row-item
+.rd3-content-block {
+
+    height: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+}
+
+
+/* --------------------------------
+ * Content Block Content
+ * -------------------------------- */
+
+.rd3-content-row-item
+.rd3-content-block-content {
+
+    flex: 1 1 auto;
+
+}
+
+
+/* --------------------------------
+ * Content Block Link
+ * -------------------------------- */
+
+.rd3-content-row-item
+.rd3-content-block-link {
+
+    margin-top: auto;
+
+}
+
+
+/* --------------------------------
+ * Edit Link
+ * -------------------------------- */
+
+.rd3-content-row-item
+.rd3-content-block-edit {
+
+    margin-top: 20px;
+
 }
 
 
@@ -65,13 +141,18 @@
 @media (max-width: 1000px) {
 
     .rd3-content-row.rd3-row-inline {
+
         flex-direction: column;
+
     }
 
 
     .rd3-content-row.rd3-row-inline
     .rd3-content-row-item {
+
         width: 100%;
+
     }
 
 }
+

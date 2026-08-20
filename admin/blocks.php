@@ -72,10 +72,9 @@ add_action(
 	'rd3_register_content_block_post_type'
 );
 
-
 /*
  * ============================================================
- * OPTIONAL LINK META BOX
+ * LINK META BOX
  * ============================================================
  */
 
@@ -83,7 +82,7 @@ function rd3_content_block_add_link_meta_box() {
 
 	add_meta_box(
 		'rd3_content_block_link',
-		'Optional Link',
+		'Link',
 		'rd3_content_block_link_meta_box',
 		'rd3_content_block',
 		'normal',
@@ -99,7 +98,7 @@ add_action(
 
 /*
  * ============================================================
- * DISPLAY OPTIONAL LINK META BOX
+ * DISPLAY LINK META BOX
  * ============================================================
  */
 
@@ -112,19 +111,22 @@ function rd3_content_block_link_meta_box( $post ) {
 
 
 	/*
-	 * Get saved Link Text.
+	 * Get saved settings.
 	 */
 
-	$link_text = get_post_meta(
+	$link_type = get_post_meta(
 		$post->ID,
-		'_rd3_content_block_link_text',
+		'_rd3_content_block_link_type',
 		true
 	);
 
-
-	/*
-	 * Get saved Link URL.
-	 */
+	$link_page_id = absint(
+		get_post_meta(
+			$post->ID,
+			'_rd3_content_block_link_page_id',
+			true
+		)
+	);
 
 	$link_url = get_post_meta(
 		$post->ID,
@@ -132,10 +134,11 @@ function rd3_content_block_link_meta_box( $post ) {
 		true
 	);
 
-
-	/*
-	 * Get saved Link Target.
-	 */
+	$link_text = get_post_meta(
+		$post->ID,
+		'_rd3_content_block_link_text',
+		true
+	);
 
 	$link_target = get_post_meta(
 		$post->ID,
@@ -145,7 +148,36 @@ function rd3_content_block_link_meta_box( $post ) {
 
 
 	/*
-	 * Default to Same Window.
+	 * Default Link Type.
+	 *
+	 * Existing blocks with a URL are treated
+	 * as External URL links.
+	 */
+
+	if (
+		! in_array(
+			$link_type,
+			array(
+				'internal',
+				'external',
+			),
+			true
+		)
+	) {
+
+		if ( '' !== trim( $link_url ) ) {
+
+			$link_type = 'external';
+
+		} else {
+
+			$link_type = 'internal';
+		}
+	}
+
+
+	/*
+	 * Default target.
 	 */
 
 	if (
@@ -162,32 +194,216 @@ function rd3_content_block_link_meta_box( $post ) {
 		$link_target = '_self';
 	}
 
-
 	?>
+
+	<p style="margin-top:0;">
+		<strong>Optional Link</strong>
+	</p>
 
 	<p
 		style="
 			margin-top:0;
 			color:#666;
-			font-size:13px;
+			font-size:12px;
 		"
 	>
 		Add a link to appear below the Content Block content.
 	</p>
 
 
+	<?php
+	/*
+	 * ========================================================
+	 * LINK TYPE
+	 * ========================================================
+	 */
+	?>
+
+	<p>
+		<strong>Link Type</strong>
+	</p>
+
+
+	<p>
+
+		<label>
+
+			<input
+				type="radio"
+				name="rd3_content_block_link_type"
+				value="internal"
+				<?php checked(
+					$link_type,
+					'internal'
+				); ?>
+			>
+
+			Internal Page
+
+		</label>
+
+	</p>
+
+
+	<p>
+
+		<label>
+
+			<input
+				type="radio"
+				name="rd3_content_block_link_type"
+				value="external"
+				<?php checked(
+					$link_type,
+					'external'
+				); ?>
+			>
+
+			External URL
+
+		</label>
+
+	</p>
+
+
+	<?php
+	/*
+	 * ========================================================
+	 * INTERNAL PAGE
+	 * ========================================================
+	 */
+	?>
+
+	<div
+		id="rd3-content-block-internal-link"
+		style="
+			<?php
+			echo 'internal' === $link_type
+				? ''
+				: 'display:none;';
+			?>
+		"
+	>
+
+		<p>
+
+			<label
+				for="rd3_content_block_link_page_id"
+			>
+
+				<strong>
+					Internal Page
+				</strong>
+
+			</label>
+
+		</p>
+
+		<p>
+
+			<?php
+
+			wp_dropdown_pages(
+				array(
+					'name'              =>
+						'rd3_content_block_link_page_id',
+
+					'id'                =>
+						'rd3_content_block_link_page_id',
+
+					'selected'          =>
+						$link_page_id,
+
+					'show_option_none' =>
+						'— Select a page —',
+
+					'option_none_value' =>
+						'0',
+
+					'class'             =>
+						'widefat',
+				)
+			);
+
+			?>
+
+		</p>
+
+	</div>
+
+
+	<?php
+	/*
+	 * ========================================================
+	 * EXTERNAL URL
+	 * ========================================================
+	 */
+	?>
+
+	<div
+		id="rd3-content-block-external-link"
+		style="
+			<?php
+			echo 'external' === $link_type
+				? ''
+				: 'display:none;';
+			?>
+		"
+	>
+
+		<p>
+
+			<label
+				for="rd3_content_block_link_url"
+			>
+
+				<strong>
+					External URL
+				</strong>
+
+			</label>
+
+		</p>
+
+		<p>
+
+			<input
+				type="url"
+				id="rd3_content_block_link_url"
+				name="rd3_content_block_link_url"
+				value="<?php echo esc_attr(
+					$link_url
+				); ?>"
+				class="widefat"
+				placeholder="https://example.com/"
+			>
+
+		</p>
+
+	</div>
+
+
+	<?php
+	/*
+	 * ========================================================
+	 * LINK TEXT
+	 * ========================================================
+	 */
+	?>
+
 	<p>
 
 		<label
 			for="rd3_content_block_link_text"
 		>
+
 			<strong>
 				Link Text
 			</strong>
+
 		</label>
 
 	</p>
-
 
 	<p>
 
@@ -205,46 +421,27 @@ function rd3_content_block_link_meta_box( $post ) {
 	</p>
 
 
-	<p>
-
-		<label
-			for="rd3_content_block_link_url"
-		>
-			<strong>
-				Link URL
-			</strong>
-		</label>
-
-	</p>
-
-
-	<p>
-
-		<input
-			type="url"
-			id="rd3_content_block_link_url"
-			name="rd3_content_block_link_url"
-			value="<?php echo esc_attr(
-				$link_url
-			); ?>"
-			class="widefat"
-			placeholder="https://example.com/"
-		>
-
-	</p>
-
+	<?php
+	/*
+	 * ========================================================
+	 * LINK TARGET
+	 * ========================================================
+	 */
+	?>
 
 	<p>
 
 		<label
 			for="rd3_content_block_link_target"
 		>
+
 			<strong>
-				Open Link</strong>
+				Open Link
+			</strong>
+
 		</label>
 
 	</p>
-
 
 	<p>
 
@@ -286,10 +483,88 @@ function rd3_content_block_link_meta_box( $post ) {
 			font-size:12px;
 		"
 	>
-		Leave these fields empty if this Content Block
-		does not need a link.
+
+		Choose an internal page or enter an external URL.
+		Only the selected link type will be used.
+
 	</p>
 
+
+	<script>
+
+	document.addEventListener(
+		'DOMContentLoaded',
+		function () {
+
+			const radios =
+				document.querySelectorAll(
+					'input[name="rd3_content_block_link_type"]'
+				);
+
+			const internal =
+				document.getElementById(
+					'rd3-content-block-internal-link'
+				);
+
+			const external =
+				document.getElementById(
+					'rd3-content-block-external-link'
+				);
+
+
+			function updateLinkType() {
+
+				const selected =
+					document.querySelector(
+						'input[name="rd3_content_block_link_type"]:checked'
+					);
+
+
+				if ( ! selected ) {
+					return;
+				}
+
+
+				if (
+					'internal'
+					=== selected.value
+				) {
+
+					internal.style.display =
+						'';
+
+					external.style.display =
+						'none';
+
+				} else {
+
+					internal.style.display =
+						'none';
+
+					external.style.display =
+						'';
+				}
+			}
+
+
+			radios.forEach(
+				function (radio) {
+
+					radio.addEventListener(
+						'change',
+						updateLinkType
+					);
+
+				}
+			);
+
+
+			updateLinkType();
+
+		}
+	);
+
+	</script>
 
 	<?php
 }
@@ -305,10 +580,6 @@ function rd3_content_block_save_link_settings(
 	$post_id
 ) {
 
-	/*
-	 * Check nonce exists.
-	 */
-
 	if (
 		! isset(
 			$_POST['rd3_content_block_link_nonce']
@@ -318,10 +589,6 @@ function rd3_content_block_save_link_settings(
 		return;
 	}
 
-
-	/*
-	 * Verify nonce.
-	 */
 
 	if (
 		! wp_verify_nonce(
@@ -334,10 +601,6 @@ function rd3_content_block_save_link_settings(
 	}
 
 
-	/*
-	 * Ignore autosaves.
-	 */
-
 	if (
 		defined( 'DOING_AUTOSAVE' )
 		&&
@@ -347,10 +610,6 @@ function rd3_content_block_save_link_settings(
 		return;
 	}
 
-
-	/*
-	 * Check user permission.
-	 */
 
 	if (
 		! current_user_can(
@@ -363,10 +622,6 @@ function rd3_content_block_save_link_settings(
 	}
 
 
-	/*
-	 * Make sure this is a Content Block.
-	 */
-
 	if (
 		'rd3_content_block'
 		!== get_post_type(
@@ -375,6 +630,111 @@ function rd3_content_block_save_link_settings(
 	) {
 
 		return;
+	}
+
+
+	/*
+	 * ========================================================
+	 * SAVE LINK TYPE
+	 * ========================================================
+	 */
+
+	$link_type = isset(
+		$_POST['rd3_content_block_link_type']
+	)
+		? sanitize_key(
+			wp_unslash(
+				$_POST['rd3_content_block_link_type']
+			)
+		)
+		: 'internal';
+
+
+	if (
+		! in_array(
+			$link_type,
+			array(
+				'internal',
+				'external',
+			),
+			true
+		)
+	) {
+
+		$link_type = 'internal';
+	}
+
+
+	update_post_meta(
+		$post_id,
+		'_rd3_content_block_link_type',
+		$link_type
+	);
+
+
+	/*
+	 * ========================================================
+	 * SAVE INTERNAL PAGE
+	 * ========================================================
+	 */
+
+	$link_page_id = isset(
+		$_POST['rd3_content_block_link_page_id']
+	)
+		? absint(
+			$_POST['rd3_content_block_link_page_id']
+		)
+		: 0;
+
+
+	if ( $link_page_id ) {
+
+		update_post_meta(
+			$post_id,
+			'_rd3_content_block_link_page_id',
+			$link_page_id
+		);
+
+	} else {
+
+		delete_post_meta(
+			$post_id,
+			'_rd3_content_block_link_page_id'
+		);
+	}
+
+
+	/*
+	 * ========================================================
+	 * SAVE EXTERNAL URL
+	 * ========================================================
+	 */
+
+	$link_url = isset(
+		$_POST['rd3_content_block_link_url']
+	)
+		? esc_url_raw(
+			wp_unslash(
+				$_POST['rd3_content_block_link_url']
+			)
+		)
+		: '';
+
+
+	if ( '' !== $link_url ) {
+
+		update_post_meta(
+			$post_id,
+			'_rd3_content_block_link_url',
+			$link_url
+		);
+
+	} else {
+
+		delete_post_meta(
+			$post_id,
+			'_rd3_content_block_link_url'
+		);
 	}
 
 
@@ -414,40 +774,6 @@ function rd3_content_block_save_link_settings(
 
 	/*
 	 * ========================================================
-	 * SAVE LINK URL
-	 * ========================================================
-	 */
-
-	$link_url = isset(
-		$_POST['rd3_content_block_link_url']
-	)
-		? esc_url_raw(
-			wp_unslash(
-				$_POST['rd3_content_block_link_url']
-			)
-		)
-		: '';
-
-
-	if ( '' !== $link_url ) {
-
-		update_post_meta(
-			$post_id,
-			'_rd3_content_block_link_url',
-			$link_url
-		);
-
-	} else {
-
-		delete_post_meta(
-			$post_id,
-			'_rd3_content_block_link_url'
-		);
-	}
-
-
-	/*
-	 * ========================================================
 	 * SAVE LINK TARGET
 	 * ========================================================
 	 */
@@ -462,10 +788,6 @@ function rd3_content_block_save_link_settings(
 		)
 		: '_self';
 
-
-	/*
-	 * Only allow supported targets.
-	 */
 
 	if (
 		! in_array(
@@ -488,6 +810,7 @@ function rd3_content_block_save_link_settings(
 		$link_target
 	);
 }
+
 
 add_action(
 	'save_post_rd3_content_block',

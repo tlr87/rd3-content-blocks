@@ -1,4 +1,5 @@
 <?php
+
 /**
  * RD3 Content Blocks
  *
@@ -22,16 +23,24 @@ function rd3_content_block_shortcode( $atts ) {
 		'rd3_block'
 	);
 
-	$block_id = absint( $atts['id'] );
+
+	$block_id = absint(
+		$atts['id']
+	);
+
 
 	if ( ! $block_id ) {
 		return '';
 	}
 
+
 	if (
 		'rd3_content_block'
-		!== get_post_type( $block_id )
+		!== get_post_type(
+			$block_id
+		)
 	) {
+
 		return '';
 	}
 
@@ -39,6 +48,7 @@ function rd3_content_block_shortcode( $atts ) {
 	/*
 	 * Get Content Block title.
 	 */
+
 	$title = get_the_title(
 		$block_id
 	);
@@ -47,6 +57,7 @@ function rd3_content_block_shortcode( $atts ) {
 	/*
 	 * Get Content Block content.
 	 */
+
 	$content = get_post_field(
 		'post_content',
 		$block_id
@@ -54,19 +65,40 @@ function rd3_content_block_shortcode( $atts ) {
 
 
 	/*
-	 * Get Link settings.
+	 * ========================================================
+	 * GET LINK SETTINGS
+	 * ========================================================
 	 */
-	$link_text = get_post_meta(
+
+	$link_type = get_post_meta(
 		$block_id,
-		'_rd3_content_block_link_text',
+		'_rd3_content_block_link_type',
 		true
 	);
+
+
+	$link_page_id = absint(
+		get_post_meta(
+			$block_id,
+			'_rd3_content_block_link_page_id',
+			true
+		)
+	);
+
 
 	$link_url = get_post_meta(
 		$block_id,
 		'_rd3_content_block_link_url',
 		true
 	);
+
+
+	$link_text = get_post_meta(
+		$block_id,
+		'_rd3_content_block_link_text',
+		true
+	);
+
 
 	$link_target = get_post_meta(
 		$block_id,
@@ -76,40 +108,50 @@ function rd3_content_block_shortcode( $atts ) {
 
 
 	/*
-	 * If the Content Block contains
-	 * no title, content or link,
-	 * do not render anything.
+	 * ========================================================
+	 * VALIDATE LINK TYPE
+	 * ========================================================
 	 */
-	if (
-		'' === trim( $content )
-		&&
-		'' === trim( $title )
-		&&
-		'' === trim( $link_text )
-		&&
-		'' === trim( $link_url )
-	) {
-		return '';
-	}
 
-
-	/*
-	 * Prevent Content Blocks containing
-	 * another Content Block.
-	 */
 	if (
-		has_shortcode(
-			$content,
-			'rd3_block'
+		! in_array(
+			$link_type,
+			array(
+				'internal',
+				'external',
+			),
+			true
 		)
 	) {
-		return '';
+
+		/*
+		 * Backwards compatibility.
+		 *
+		 * Existing Content Blocks that have a URL
+		 * are treated as external links.
+		 */
+
+		if (
+			'' !== trim(
+				$link_url
+			)
+		) {
+
+			$link_type = 'external';
+
+		} else {
+
+			$link_type = 'internal';
+		}
 	}
 
 
 	/*
-	 * Validate link target.
+	 * ========================================================
+	 * VALIDATE LINK TARGET
+	 * ========================================================
 	 */
+
 	if (
 		! in_array(
 			$link_target,
@@ -126,17 +168,115 @@ function rd3_content_block_shortcode( $atts ) {
 
 
 	/*
-	 * Start Content Block wrapper.
+	 * ========================================================
+	 * DETERMINE FINAL LINK URL
+	 * ========================================================
 	 */
+
+	$final_link_url = '';
+
+
+	/*
+	 * INTERNAL PAGE
+	 */
+
+	if (
+		'internal'
+		=== $link_type
+		&&
+		$link_page_id
+	) {
+
+		$final_link_url = get_permalink(
+			$link_page_id
+		);
+	}
+
+
+	/*
+	 * EXTERNAL URL
+	 */
+
+	if (
+		'external'
+		=== $link_type
+		&&
+		'' !== trim(
+			$link_url
+		)
+	) {
+
+		$final_link_url = $link_url;
+	}
+
+
+	/*
+	 * ========================================================
+	 * DETERMINE WHETHER ANYTHING EXISTS
+	 * ========================================================
+	 */
+
+	if (
+		'' === trim(
+			$content
+		)
+		&&
+		'' === trim(
+			$title
+		)
+		&&
+		(
+			'' === trim(
+				$link_text
+			)
+			||
+			'' === trim(
+				$final_link_url
+			)
+		)
+	) {
+
+		return '';
+	}
+
+
+	/*
+	 * ========================================================
+	 * PREVENT NESTED CONTENT BLOCKS
+	 * ========================================================
+	 */
+
+	if (
+		has_shortcode(
+			$content,
+			'rd3_block'
+		)
+	) {
+
+		return '';
+	}
+
+
+	/*
+	 * ========================================================
+	 * START CONTENT BLOCK
+	 * ========================================================
+	 */
+
 	$output =
 		'<div class="rd3-content-block">';
 
 
 	/*
-	 * Render title.
+	 * ========================================================
+	 * TITLE
+	 * ========================================================
 	 */
+
 	if (
-		'' !== trim( $title )
+		'' !== trim(
+			$title
+		)
 	) {
 
 		$output .=
@@ -153,10 +293,15 @@ function rd3_content_block_shortcode( $atts ) {
 
 
 	/*
-	 * Render Content Block content.
+	 * ========================================================
+	 * CONTENT
+	 * ========================================================
 	 */
+
 	if (
-		'' !== trim( $content )
+		'' !== trim(
+			$content
+		)
 	) {
 
 		$output .=
@@ -173,30 +318,47 @@ function rd3_content_block_shortcode( $atts ) {
 
 
 	/*
-	 * Render optional link.
+	 * ========================================================
+	 * LINK
+	 * ========================================================
 	 *
-	 * The link only appears when both
-	 * Link Text and Link URL exist.
+	 * The link is rendered only when both:
+	 *
+	 * - Link Text exists
+	 * - A valid final URL exists
+	 *
 	 */
+
 	if (
-		'' !== trim( $link_text )
+		'' !== trim(
+			$link_text
+		)
 		&&
-		'' !== trim( $link_url )
+		'' !== trim(
+			$final_link_url
+		)
 	) {
 
 		$output .=
 			'<div class="rd3-content-block-link">';
 
+
 		$output .=
 			'<a href="' .
-			esc_url( $link_url ) .
+			esc_url(
+				$final_link_url
+			) .
 			'" target="' .
-			esc_attr( $link_target ) .
+			esc_attr(
+				$link_target
+			) .
 			'"';
+
 
 		/*
 		 * Security for New Tab.
 		 */
+
 		if (
 			'_blank'
 			=== $link_target
@@ -206,16 +368,20 @@ function rd3_content_block_shortcode( $atts ) {
 				' rel="noopener noreferrer"';
 		}
 
+
 		$output .=
 			'>';
+
 
 		$output .=
 			esc_html(
 				$link_text
 			);
 
+
 		$output .=
 			'</a>';
+
 
 		$output .=
 			'</div>';
@@ -223,9 +389,11 @@ function rd3_content_block_shortcode( $atts ) {
 
 
 	/*
-	 * Add Edit link for logged-in users
-	 * who can edit this Content Block.
+	 * ========================================================
+	 * EDIT LINK
+	 * ========================================================
 	 */
+
 	if (
 		is_user_logged_in()
 		&&
@@ -240,21 +408,28 @@ function rd3_content_block_shortcode( $atts ) {
 			''
 		);
 
+
 		if ( $edit_url ) {
 
 			$output .=
 				'<div class="rd3-content-block-edit">';
 
+
 			$output .=
 				'<a href="' .
-				esc_url( $edit_url ) .
+				esc_url(
+					$edit_url
+				) .
 				'">';
+
 
 			$output .=
 				'Edit Content Block';
 
+
 			$output .=
 				'</a>';
+
 
 			$output .=
 				'</div>';
@@ -263,8 +438,11 @@ function rd3_content_block_shortcode( $atts ) {
 
 
 	/*
-	 * Close Content Block wrapper.
+	 * ========================================================
+	 * CLOSE CONTENT BLOCK
+	 * ========================================================
 	 */
+
 	$output .=
 		'</div>';
 
@@ -295,16 +473,24 @@ function rd3_row_shortcode( $atts ) {
 		'rd3_row'
 	);
 
-	$row_id = absint( $atts['id'] );
+
+	$row_id = absint(
+		$atts['id']
+	);
+
 
 	if ( ! $row_id ) {
 		return '';
 	}
 
+
 	if (
 		'rd3_row'
-		!== get_post_type( $row_id )
+		!== get_post_type(
+			$row_id
+		)
 	) {
+
 		return '';
 	}
 
@@ -312,11 +498,13 @@ function rd3_row_shortcode( $atts ) {
 	/*
 	 * Get Row layout.
 	 */
+
 	$layout = get_post_meta(
 		$row_id,
 		'_rd3_row_layout',
 		true
 	);
+
 
 	if (
 		! in_array(
@@ -336,16 +524,22 @@ function rd3_row_shortcode( $atts ) {
 	/*
 	 * Get Row positions.
 	 */
+
 	$positions = get_post_meta(
 		$row_id,
 		'_rd3_row_positions',
 		true
 	);
 
+
 	if (
-		! is_array( $positions )
+		! is_array(
+			$positions
+		)
 		||
-		empty( $positions )
+		empty(
+			$positions
+		)
 	) {
 
 		return '';
@@ -361,6 +555,7 @@ function rd3_row_shortcode( $atts ) {
 	/*
 	 * Create outer wrapper.
 	 */
+
 	$output =
 		'<div class="rd3-content-row-wrapper">';
 
@@ -368,6 +563,7 @@ function rd3_row_shortcode( $atts ) {
 	/*
 	 * Add Edit Row link.
 	 */
+
 	if (
 		is_user_logged_in()
 		&&
@@ -382,21 +578,28 @@ function rd3_row_shortcode( $atts ) {
 			''
 		);
 
+
 		if ( $edit_url ) {
 
 			$output .=
 				'<div class="rd3-content-row-edit">';
 
+
 			$output .=
 				'<a href="' .
-				esc_url( $edit_url ) .
+				esc_url(
+					$edit_url
+				) .
 				'">';
+
 
 			$output .=
 				'Edit Row';
 
+
 			$output .=
 				'</a>';
+
 
 			$output .=
 				'</div>';
@@ -407,15 +610,19 @@ function rd3_row_shortcode( $atts ) {
 	/*
 	 * Create actual Row.
 	 */
+
 	$output .=
 		'<div class="rd3-content-row rd3-row-' .
-		esc_attr( $layout ) .
+		esc_attr(
+			$layout
+		) .
 		'">';
 
 
 	/*
 	 * Render Content Blocks.
 	 */
+
 	foreach (
 		$positions as $position => $block_id
 	) {
@@ -425,9 +632,11 @@ function rd3_row_shortcode( $atts ) {
 				$block_id
 			);
 
+
 		if ( ! $block_id ) {
 			continue;
 		}
+
 
 		if (
 			'rd3_content_block'
@@ -444,6 +653,7 @@ function rd3_row_shortcode( $atts ) {
 		/*
 		 * Render Content Block.
 		 */
+
 		$block_content =
 			do_shortcode(
 				'[rd3_block id="' .
@@ -465,8 +675,10 @@ function rd3_row_shortcode( $atts ) {
 		$output .=
 			'<div class="rd3-content-row-item">';
 
+
 		$output .=
 			$block_content;
+
 
 		$output .=
 			'</div>';
@@ -476,6 +688,7 @@ function rd3_row_shortcode( $atts ) {
 	/*
 	 * Close actual Row.
 	 */
+
 	$output .=
 		'</div>';
 
@@ -483,6 +696,7 @@ function rd3_row_shortcode( $atts ) {
 	/*
 	 * Close outer wrapper.
 	 */
+
 	$output .=
 		'</div>';
 
@@ -514,6 +728,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Advanced Row uses dynamic attributes.
 	 */
+
 	if (
 		empty( $atts )
 		||
@@ -527,6 +742,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Sanitize attribute keys.
 	 */
+
 	$clean_atts = array();
 
 
@@ -535,7 +751,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 	) {
 
 		$clean_atts[
-			sanitize_key( $key )
+			sanitize_key(
+				$key
+			)
 		] = $value;
 	}
 
@@ -546,6 +764,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Find Advanced Rows.
 	 */
+
 	$advanced_rows = get_posts(
 		array(
 			'post_type'      => 'rd3_advanced_row',
@@ -557,7 +776,12 @@ function rd3_advanced_row_shortcode( $atts ) {
 	);
 
 
-	if ( empty( $advanced_rows ) ) {
+	if (
+		empty(
+			$advanced_rows
+		)
+	) {
+
 		return '';
 	}
 
@@ -571,6 +795,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	 * Find the Advanced Row containing
 	 * one of the supplied shortcode IDs.
 	 */
+
 	foreach (
 		$advanced_rows as $advanced_row
 	) {
@@ -668,6 +893,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 		 * Does this Advanced Row contain
 		 * one of the supplied shortcode IDs?
 		 */
+
 		foreach (
 			$atts as $attribute => $value
 		) {
@@ -695,7 +921,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 	if (
 		! $matched_row_id
 		||
-		empty( $matched_blocks )
+		empty(
+			$matched_blocks
+		)
 	) {
 
 		return '';
@@ -705,6 +933,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Get saved layout.
 	 */
+
 	$layout = get_post_meta(
 		$matched_row_id,
 		'_rd3_advanced_row_layout',
@@ -715,6 +944,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Default to inline.
 	 */
+
 	if (
 		! in_array(
 			$layout,
@@ -733,9 +963,13 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Sort blocks by position.
 	 */
+
 	uasort(
 		$matched_blocks,
-		function( $a, $b ) {
+		function (
+			$a,
+			$b
+		) {
 
 			return $a['position']
 				<=>
@@ -747,6 +981,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Create Row class.
 	 */
+
 	$row_class =
 		'rd3-content-row rd3-advanced-row rd3-row-' .
 		$layout;
@@ -755,6 +990,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Create outer wrapper.
 	 */
+
 	$output =
 		'<div class="rd3-content-row-wrapper">';
 
@@ -762,6 +998,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Add Edit Advanced Row link.
 	 */
+
 	if (
 		is_user_logged_in()
 		&&
@@ -782,16 +1019,22 @@ function rd3_advanced_row_shortcode( $atts ) {
 			$output .=
 				'<div class="rd3-content-row-edit">';
 
+
 			$output .=
 				'<a href="' .
-				esc_url( $edit_url ) .
+				esc_url(
+					$edit_url
+				) .
 				'">';
+
 
 			$output .=
 				'Edit Advanced Row';
 
+
 			$output .=
 				'</a>';
+
 
 			$output .=
 				'</div>';
@@ -802,6 +1045,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Create actual Advanced Row.
 	 */
+
 	$output .=
 		'<div class="' .
 		esc_attr(
@@ -813,20 +1057,22 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Track whether anything was rendered.
 	 */
+
 	$has_content = false;
 
 
 	/*
 	 * Render selected Content Blocks.
 	 */
+
 	foreach (
 		$matched_blocks as $shortcode_id => $block
 	) {
 
-
 		/*
 		 * Attribute not supplied = hidden.
 		 */
+
 		$show =
 			isset(
 				$atts[
@@ -843,8 +1089,11 @@ function rd3_advanced_row_shortcode( $atts ) {
 		/*
 		 * Only "1" displays the block.
 		 */
+
 		if (
-			'1' !== $show
+			'1'
+			!==
+			$show
 		) {
 
 			continue;
@@ -865,6 +1114,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 		/*
 		 * Render Content Block.
 		 */
+
 		$block_content =
 			do_shortcode(
 				'[rd3_block id="' .
@@ -889,8 +1139,10 @@ function rd3_advanced_row_shortcode( $atts ) {
 		$output .=
 			'<div class="rd3-content-row-item">';
 
+
 		$output .=
 			$block_content;
+
 
 		$output .=
 			'</div>';
@@ -900,7 +1152,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Don't output an empty Advanced Row.
 	 */
+
 	if ( ! $has_content ) {
+
 		return '';
 	}
 
@@ -908,6 +1162,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Close actual Advanced Row.
 	 */
+
 	$output .=
 		'</div>';
 
@@ -915,6 +1170,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Close outer wrapper.
 	 */
+
 	$output .=
 		'</div>';
 
