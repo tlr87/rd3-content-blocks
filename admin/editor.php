@@ -254,3 +254,11 @@ add_filter(
     'mce_external_plugins',
     'rd3_content_block_tinymce_plugin'
 );
+
+
+
+add_filter(
+    'mce_external_plugins',
+    'rd3_content_block_tinymce_plugin'
+);
+

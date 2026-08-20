@@ -1,845 +1,495 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+/**
+ * RD3 Content Blocks
+ *
+ * Content Block administration.
+ */
 
 
 /*
- * Register RD3 Content Block post type.
+ * ============================================================
+ * REGISTER CONTENT BLOCK POST TYPE
+ * ============================================================
  */
+
 function rd3_register_content_block_post_type() {
 
-    register_post_type(
-        'rd3_content_block',
-        array(
+	register_post_type(
+		'rd3_content_block',
+		array(
 
-            'labels' => array(
-                'name'          => 'Content Blocks',
-                'singular_name' => 'Content Block',
-                'add_new'       => 'Add New',
-                'add_new_item'  => 'Add New Content Block',
-                'edit_item'     => 'Edit Content Block',
-                'new_item'      => 'New Content Block',
-                'view_item'     => 'View Content Block',
-                'search_items'  => 'Search Content Blocks',
-            ),
+			'labels' => array(
 
-            'public'       => false,
-            'show_ui'      => true,
-            'show_in_menu' => 'rd3-content-blocks',
+				'name'          => 'Content Blocks',
+				'singular_name' => 'Content Block',
 
-            'supports' => array(
-                'title',
-                'editor',
-            ),
+				'add_new'       => 'Add New',
+				'add_new_item'  => 'Add New Content Block',
 
-            'capability_type' => 'post',
-            'map_meta_cap'    => true,
-        )
-    );
+				'edit_item'     => 'Edit Content Block',
+				'new_item'      => 'New Content Block',
+
+				'view_item'     => 'View Content Block',
+
+				'search_items'  => 'Search Content Blocks',
+
+				'not_found'     => 'No Content Blocks found.',
+
+				'menu_name'     => 'Content Blocks',
+
+			),
+
+			'public' => false,
+
+			'show_ui' => true,
+
+			'show_in_menu' => 'rd3-content-blocks',
+
+			'show_in_admin_bar' => false,
+
+			'show_in_nav_menus' => false,
+
+			'supports' => array(
+				'title',
+				'editor',
+			),
+
+			'menu_icon' => 'dashicons-screenoptions',
+
+			'has_archive' => false,
+
+			'rewrite' => false,
+
+			'query_var' => false,
+
+		)
+	);
 }
 
 add_action(
-    'init',
-    'rd3_register_content_block_post_type'
+	'init',
+	'rd3_register_content_block_post_type'
 );
 
 
 /*
- * Add shortcode column to the native
- * WordPress Content Blocks list.
+ * ============================================================
+ * OPTIONAL LINK META BOX
+ * ============================================================
  */
-function rd3_content_block_columns( $columns ) {
 
-    $new_columns = array();
+function rd3_content_block_add_link_meta_box() {
 
-    foreach ( $columns as $key => $title ) {
-
-        $new_columns[ $key ] = $title;
-
-        if ( 'title' === $key ) {
-
-            $new_columns['rd3_shortcode'] =
-                'Shortcode';
-        }
-    }
-
-    return $new_columns;
+	add_meta_box(
+		'rd3_content_block_link',
+		'Optional Link',
+		'rd3_content_block_link_meta_box',
+		'rd3_content_block',
+		'normal',
+		'default'
+	);
 }
 
-add_filter(
-    'manage_rd3_content_block_posts_columns',
-    'rd3_content_block_columns'
+add_action(
+	'add_meta_boxes',
+	'rd3_content_block_add_link_meta_box'
 );
 
 
 /*
- * Display shortcode column.
+ * ============================================================
+ * DISPLAY OPTIONAL LINK META BOX
+ * ============================================================
  */
-function rd3_content_block_column_content(
-    $column,
-    $post_id
+
+function rd3_content_block_link_meta_box( $post ) {
+
+	wp_nonce_field(
+		'rd3_content_block_link_save',
+		'rd3_content_block_link_nonce'
+	);
+
+
+	/*
+	 * Get saved Link Text.
+	 */
+
+	$link_text = get_post_meta(
+		$post->ID,
+		'_rd3_content_block_link_text',
+		true
+	);
+
+
+	/*
+	 * Get saved Link URL.
+	 */
+
+	$link_url = get_post_meta(
+		$post->ID,
+		'_rd3_content_block_link_url',
+		true
+	);
+
+
+	/*
+	 * Get saved Link Target.
+	 */
+
+	$link_target = get_post_meta(
+		$post->ID,
+		'_rd3_content_block_link_target',
+		true
+	);
+
+
+	/*
+	 * Default to Same Window.
+	 */
+
+	if (
+		! in_array(
+			$link_target,
+			array(
+				'_self',
+				'_blank',
+			),
+			true
+		)
+	) {
+
+		$link_target = '_self';
+	}
+
+
+	?>
+
+	<p
+		style="
+			margin-top:0;
+			color:#666;
+			font-size:13px;
+		"
+	>
+		Add a link to appear below the Content Block content.
+	</p>
+
+
+	<p>
+
+		<label
+			for="rd3_content_block_link_text"
+		>
+			<strong>
+				Link Text
+			</strong>
+		</label>
+
+	</p>
+
+
+	<p>
+
+		<input
+			type="text"
+			id="rd3_content_block_link_text"
+			name="rd3_content_block_link_text"
+			value="<?php echo esc_attr(
+				$link_text
+			); ?>"
+			class="widefat"
+			placeholder="e.g. Get Help"
+		>
+
+	</p>
+
+
+	<p>
+
+		<label
+			for="rd3_content_block_link_url"
+		>
+			<strong>
+				Link URL
+			</strong>
+		</label>
+
+	</p>
+
+
+	<p>
+
+		<input
+			type="url"
+			id="rd3_content_block_link_url"
+			name="rd3_content_block_link_url"
+			value="<?php echo esc_attr(
+				$link_url
+			); ?>"
+			class="widefat"
+			placeholder="https://example.com/"
+		>
+
+	</p>
+
+
+	<p>
+
+		<label
+			for="rd3_content_block_link_target"
+		>
+			<strong>
+				Open Link</strong>
+		</label>
+
+	</p>
+
+
+	<p>
+
+		<select
+			id="rd3_content_block_link_target"
+			name="rd3_content_block_link_target"
+			style="width:100%;"
+		>
+
+			<option
+				value="_self"
+				<?php selected(
+					$link_target,
+					'_self'
+				); ?>
+			>
+				Same Window
+			</option>
+
+			<option
+				value="_blank"
+				<?php selected(
+					$link_target,
+					'_blank'
+				); ?>
+			>
+				New Tab
+			</option>
+
+		</select>
+
+	</p>
+
+
+	<p
+		style="
+			margin-bottom:0;
+			color:#666;
+			font-size:12px;
+		"
+	>
+		Leave these fields empty if this Content Block
+		does not need a link.
+	</p>
+
+
+	<?php
+}
+
+
+/*
+ * ============================================================
+ * SAVE LINK SETTINGS
+ * ============================================================
+ */
+
+function rd3_content_block_save_link_settings(
+	$post_id
 ) {
 
-    if ( 'rd3_shortcode' !== $column ) {
-        return;
-    }
+	/*
+	 * Check nonce exists.
+	 */
 
-    $shortcode =
-        '[rd3_block id="' .
-        $post_id .
-        '"]';
+	if (
+		! isset(
+			$_POST['rd3_content_block_link_nonce']
+		)
+	) {
 
-    echo '<code>';
+		return;
+	}
 
-    echo esc_html(
-        $shortcode
-    );
 
-    echo '</code>';
+	/*
+	 * Verify nonce.
+	 */
 
-    echo ' ';
+	if (
+		! wp_verify_nonce(
+			$_POST['rd3_content_block_link_nonce'],
+			'rd3_content_block_link_save'
+		)
+	) {
 
-    echo '<button
-        type="button"
-        class="button rd3-copy-shortcode"
-        data-shortcode="' .
-        esc_attr(
-            $shortcode
-        ) .
-        '"
-        style="margin-left:8px;"
-    >Copy</button>';
+		return;
+	}
+
+
+	/*
+	 * Ignore autosaves.
+	 */
+
+	if (
+		defined( 'DOING_AUTOSAVE' )
+		&&
+		DOING_AUTOSAVE
+	) {
+
+		return;
+	}
+
+
+	/*
+	 * Check user permission.
+	 */
+
+	if (
+		! current_user_can(
+			'edit_post',
+			$post_id
+		)
+	) {
+
+		return;
+	}
+
+
+	/*
+	 * Make sure this is a Content Block.
+	 */
+
+	if (
+		'rd3_content_block'
+		!== get_post_type(
+			$post_id
+		)
+	) {
+
+		return;
+	}
+
+
+	/*
+	 * ========================================================
+	 * SAVE LINK TEXT
+	 * ========================================================
+	 */
+
+	$link_text = isset(
+		$_POST['rd3_content_block_link_text']
+	)
+		? sanitize_text_field(
+			wp_unslash(
+				$_POST['rd3_content_block_link_text']
+			)
+		)
+		: '';
+
+
+	if ( '' !== $link_text ) {
+
+		update_post_meta(
+			$post_id,
+			'_rd3_content_block_link_text',
+			$link_text
+		);
+
+	} else {
+
+		delete_post_meta(
+			$post_id,
+			'_rd3_content_block_link_text'
+		);
+	}
+
+
+	/*
+	 * ========================================================
+	 * SAVE LINK URL
+	 * ========================================================
+	 */
+
+	$link_url = isset(
+		$_POST['rd3_content_block_link_url']
+	)
+		? esc_url_raw(
+			wp_unslash(
+				$_POST['rd3_content_block_link_url']
+			)
+		)
+		: '';
+
+
+	if ( '' !== $link_url ) {
+
+		update_post_meta(
+			$post_id,
+			'_rd3_content_block_link_url',
+			$link_url
+		);
+
+	} else {
+
+		delete_post_meta(
+			$post_id,
+			'_rd3_content_block_link_url'
+		);
+	}
+
+
+	/*
+	 * ========================================================
+	 * SAVE LINK TARGET
+	 * ========================================================
+	 */
+
+	$link_target = isset(
+		$_POST['rd3_content_block_link_target']
+	)
+		? sanitize_key(
+			wp_unslash(
+				$_POST['rd3_content_block_link_target']
+			)
+		)
+		: '_self';
+
+
+	/*
+	 * Only allow supported targets.
+	 */
+
+	if (
+		! in_array(
+			$link_target,
+			array(
+				'_self',
+				'_blank',
+			),
+			true
+		)
+	) {
+
+		$link_target = '_self';
+	}
+
+
+	update_post_meta(
+		$post_id,
+		'_rd3_content_block_link_target',
+		$link_target
+	);
 }
 
 add_action(
-    'manage_rd3_content_block_posts_custom_column',
-    'rd3_content_block_column_content',
-    10,
-    2
-);
-
-
-/*
- * Copy shortcode JavaScript.
- */
-function rd3_content_block_copy_script() {
-
-    $screen =
-        get_current_screen();
-
-    if (
-        ! $screen ||
-        'rd3_content_block'
-        !== $screen->post_type
-    ) {
-        return;
-    }
-
-    ?>
-
-    <script>
-
-    document.addEventListener(
-        'DOMContentLoaded',
-        function () {
-
-            const buttons =
-                document.querySelectorAll(
-                    '.rd3-copy-shortcode'
-                );
-
-            buttons.forEach(
-                function (button) {
-
-                    button.addEventListener(
-                        'click',
-                        function () {
-
-                            const shortcode =
-                                button.getAttribute(
-                                    'data-shortcode'
-                                );
-
-                            const textarea =
-                                document.createElement(
-                                    'textarea'
-                                );
-
-                            textarea.value =
-                                shortcode;
-
-                            textarea.style.position =
-                                'fixed';
-
-                            textarea.style.left =
-                                '-9999px';
-
-                            document.body.appendChild(
-                                textarea
-                            );
-
-                            textarea.focus();
-
-                            textarea.select();
-
-                            try {
-
-                                document.execCommand(
-                                    'copy'
-                                );
-
-                                button.textContent =
-                                    'Copied!';
-
-                                setTimeout(
-                                    function () {
-
-                                        button.textContent =
-                                            'Copy';
-
-                                    },
-                                    1500
-                                );
-
-                            } catch (error) {
-
-                                button.textContent =
-                                    'Copy failed';
-
-                                console.error(
-                                    'RD3 Content Blocks:',
-                                    error
-                                );
-                            }
-
-                            document.body.removeChild(
-                                textarea
-                            );
-
-                        }
-                    );
-
-                }
-            );
-
-        }
-    );
-
-    </script>
-
-    <?php
-}
-
-add_action(
-    'admin_footer',
-    'rd3_content_block_copy_script'
-);
-
-
-/*
- * Add Used On column to Content Blocks.
- */
-function rd3_content_block_used_on_column(
-    $columns
-) {
-
-    $columns['rd3_used_on'] =
-        'Used On';
-
-    return $columns;
-}
-
-add_filter(
-    'manage_rd3_content_block_posts_columns',
-    'rd3_content_block_used_on_column'
-);
-
-
-/*
- * Display Content Block usage.
- */
-function rd3_content_block_used_on_column_content(
-    $column,
-    $post_id
-) {
-
-    if (
-        'rd3_used_on' !== $column
-    ) {
-        return;
-    }
-
-
-    $usage =
-        rd3_get_block_usage(
-            $post_id
-        );
-
-
-    if (
-        empty( $usage )
-    ) {
-
-        echo '<span style="color:#777;">';
-        echo 'Not currently used';
-        echo '</span>';
-
-        return;
-    }
-
-
-    foreach (
-        $usage as $item
-    ) {
-
-        if (
-            ! empty(
-                $item['edit_url']
-            )
-        ) {
-
-            echo '<a href="';
-
-            echo esc_url(
-                $item['edit_url']
-            );
-
-            echo '">';
-
-            echo esc_html(
-                $item['title']
-            );
-
-            echo '</a>';
-
-        } else {
-
-            echo esc_html(
-                $item['title']
-            );
-        }
-
-
-        echo '<br>';
-
-
-        echo '<small>';
-
-        echo esc_html(
-            $item['type_label']
-        );
-
-
-        if (
-            isset(
-                $item['usage_type']
-            )
-        ) {
-
-            echo ' — ';
-
-            echo esc_html(
-                $item['usage_type']
-            );
-        }
-
-
-        if (
-            'Via Row' ===
-            $item['usage_type']
-            &&
-            ! empty(
-                $item['row_title']
-            )
-        ) {
-
-            echo ': ';
-
-            echo esc_html(
-                $item['row_title']
-            );
-        }
-
-
-        echo '</small>';
-
-        echo '<br><br>';
-    }
-}
-
-add_action(
-    'manage_rd3_content_block_posts_custom_column',
-    'rd3_content_block_used_on_column_content',
-    10,
-    2
-);
-
-
-/*
- * Make Used On column sortable.
- */
-function rd3_content_block_used_on_sortable(
-    $columns
-) {
-
-    $columns['rd3_used_on'] =
-        'rd3_used_on';
-
-    return $columns;
-}
-
-add_filter(
-    'manage_edit-rd3_content_block_sortable_columns',
-    'rd3_content_block_used_on_sortable'
-);
-
-
-/*
- * Sort Content Blocks alphabetically
- * by the first Used On title.
- */
-function rd3_content_block_used_on_orderby(
-    $query
-) {
-
-    if (
-        ! is_admin() ||
-        ! $query->is_main_query()
-    ) {
-        return;
-    }
-
-
-    if (
-        'rd3_content_block' !==
-        $query->get( 'post_type' )
-    ) {
-        return;
-    }
-
-
-    if (
-        'rd3_used_on' !==
-        $query->get( 'orderby' )
-    ) {
-        return;
-    }
-
-
-    /*
-     * Get all Content Blocks.
-     */
-    $blocks =
-        get_posts(
-            array(
-                'post_type'      => 'rd3_content_block',
-                'post_status'    => 'any',
-                'posts_per_page' => -1,
-                'fields'         => 'ids',
-                'no_found_rows'  => true,
-            )
-        );
-
-
-    foreach (
-        $blocks as $block_id
-    ) {
-
-        $usage =
-            rd3_get_block_usage(
-                $block_id
-            );
-
-
-        $titles =
-            array();
-
-
-        /*
-         * Collect every page/post title.
-         */
-        foreach (
-            $usage as $item
-        ) {
-
-            if (
-                empty(
-                    $item['title']
-                )
-            ) {
-                continue;
-            }
-
-
-            $titles[] =
-                wp_strip_all_tags(
-                    $item['title']
-                );
-        }
-
-
-        /*
-         * Find the alphabetically first
-         * page/post title.
-         */
-        if (
-            ! empty( $titles )
-        ) {
-
-            natcasesort(
-                $titles
-            );
-
-
-            $titles =
-                array_values(
-                    $titles
-                );
-
-
-            $sort_title =
-                $titles[0];
-
-        } else {
-
-            /*
-             * Unused blocks go to the end.
-             */
-            $sort_title =
-                'ZZZZZZZZZZ';
-        }
-
-
-        /*
-         * Store the alphabetical
-         * sorting value.
-         */
-        update_post_meta(
-            $block_id,
-            '_rd3_used_on_sort',
-            $sort_title
-        );
-    }
-
-
-    /*
-     * Sort by the stored title.
-     */
-    $query->set(
-        'meta_key',
-        '_rd3_used_on_sort'
-    );
-
-
-    $query->set(
-        'orderby',
-        'meta_value'
-    );
-}
-
-add_action(
-    'pre_get_posts',
-    'rd3_content_block_used_on_orderby'
-);
-
-
-/*
- * Add RD3 Content Block error panel
- * inside the Publish box.
- */
-function rd3_content_block_error_panel() {
-
-    global $post;
-
-    if (
-        ! $post ||
-        'rd3_content_block'
-        !== $post->post_type
-    ) {
-        return;
-    }
-
-    ?>
-
-    <div
-        id="rd3-content-block-error"
-        class="postbox"
-        style="
-            display:none;
-            margin:12px 0 0 0;
-        "
-    >
-
-        <h2
-            style="
-                margin:0;
-                padding:10px 12px;
-                font-size:14px;
-            "
-        >
-
-            RD3 Content Block Error
-
-        </h2>
-
-
-        <div
-            style="
-                padding:0 12px 12px 12px;
-            "
-        >
-
-            <p>
-
-                <strong>
-                    This Content Block cannot contain
-                    [rd3_block] or [rd3_row] shortcodes.
-                </strong>
-
-            </p>
-
-
-            <p>
-
-                Please remove the
-                <code>[rd3_block]</code>
-                or
-                <code>[rd3_row]</code>
-                shortcode before saving this block.
-
-            </p>
-
-        </div>
-
-    </div>
-
-    <?php
-}
-
-add_action(
-    'post_submitbox_misc_actions',
-    'rd3_content_block_error_panel'
-);
-
-
-/*
- * Prevent an RD3 Content Block from being
- * saved if it contains an RD3 Block or Row.
- */
-function rd3_content_block_save_validation_script() {
-
-    global $post;
-
-    if (
-        ! $post ||
-        'rd3_content_block'
-        !== $post->post_type
-    ) {
-        return;
-    }
-
-    ?>
-
-    <script>
-
-    document.addEventListener(
-        'DOMContentLoaded',
-        function () {
-
-            const form =
-                document.getElementById(
-                    'post'
-                );
-
-            const errorPanel =
-                document.getElementById(
-                    'rd3-content-block-error'
-                );
-
-            if (
-                ! form ||
-                ! errorPanel
-            ) {
-                return;
-            }
-
-
-            /*
-             * Get current editor content.
-             */
-            function rd3GetContent() {
-
-                let content = '';
-
-
-                /*
-                 * TinyMCE / Classic Editor.
-                 */
-                if (
-                    typeof tinymce !== 'undefined' &&
-                    tinymce.get(
-                        'content'
-                    )
-                ) {
-
-                    content =
-                        tinymce.get(
-                            'content'
-                        ).getContent();
-
-                } else {
-
-                    const textarea =
-                        document.getElementById(
-                            'content'
-                        );
-
-                    if ( textarea ) {
-
-                        content =
-                            textarea.value;
-                    }
-                }
-
-
-                return content;
-            }
-
-
-            /*
-             * Check for restricted shortcodes.
-             */
-            function rd3HasRestrictedShortcode() {
-
-                const content =
-                    rd3GetContent();
-
-
-                return (
-                    /\[rd3_block\b[^\]]*\]/i.test(
-                        content
-                    )
-                    ||
-                    /\[rd3_row\b[^\]]*\]/i.test(
-                        content
-                    )
-                );
-            }
-
-
-            /*
-             * Show error panel.
-             */
-            function rd3ShowError() {
-
-                errorPanel.style.display =
-                    'block';
-
-            }
-
-
-            /*
-             * Hide error panel.
-             */
-            function rd3HideError() {
-
-                errorPanel.style.display =
-                    'none';
-
-            }
-
-
-            /*
-             * Check the form before submission.
-             */
-            form.addEventListener(
-                'submit',
-                function (event) {
-
-                    /*
-                     * Allow autosave.
-                     */
-                    if (
-                        event.submitter &&
-                        (
-                            'autosave' ===
-                            event.submitter.name
-                            ||
-                            'autosave' ===
-                            event.submitter.id
-                        )
-                    ) {
-
-                        return;
-                    }
-
-
-                    if (
-                        rd3HasRestrictedShortcode()
-                    ) {
-
-                        event.preventDefault();
-
-                        event.stopPropagation();
-
-                        rd3ShowError();
-
-                        return false;
-                    }
-
-
-                    rd3HideError();
-
-                },
-                true
-            );
-
-
-            /*
-             * Check the Update / Publish button.
-             */
-            const updateButton =
-                document.getElementById(
-                    'publish'
-                );
-
-
-            if ( updateButton ) {
-
-                updateButton.addEventListener(
-                    'click',
-                    function (event) {
-
-                        if (
-                            rd3HasRestrictedShortcode()
-                        ) {
-
-                            event.preventDefault();
-
-                            event.stopPropagation();
-
-                            rd3ShowError();
-
-                            return false;
-                        }
-
-                    },
-                    true
-                );
-
-            }
-
-        }
-    );
-
-    </script>
-
-    <?php
-}
-
-add_action(
-    'admin_footer',
-    'rd3_content_block_save_validation_script'
+	'save_post_rd3_content_block',
+	'rd3_content_block_save_link_settings'
 );

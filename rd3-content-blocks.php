@@ -10,14 +10,30 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/*
+ * =========================================================
+ * FRONT-END STYLES
+ * =========================================================
+ */
+
+
 function rd3_content_blocks_enqueue_styles() {
+
+    wp_enqueue_style(
+        'rd3-content-blocks-blocks',
+        plugin_dir_url( __FILE__ ) .
+        'assets/blocks.css',
+        array(),
+        '1.1.0'
+    );
+
 
     wp_enqueue_style(
         'rd3-content-blocks-rows',
         plugin_dir_url( __FILE__ ) .
         'assets/rows.css',
         array(),
-        '1.0.0'
+        '1.1.0'
     );
 
     wp_enqueue_style(
@@ -25,9 +41,18 @@ function rd3_content_blocks_enqueue_styles() {
         plugin_dir_url( __FILE__ ) .
         'assets/admin.css',
         array(),
-        '1.0.0'
+        '1.1.0'
     );
 }
+
+
+/*
+ * =========================================================
+ * LOAD PLUGIN FILES
+ * =========================================================
+ */
+
+
 
 add_action(
     'wp_enqueue_scripts',

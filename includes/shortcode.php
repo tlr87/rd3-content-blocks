@@ -11,6 +11,7 @@
  * CONTENT BLOCK
  * ============================================================
  */
+
 function rd3_content_block_shortcode( $atts ) {
 
 	$atts = shortcode_atts(
@@ -27,16 +28,67 @@ function rd3_content_block_shortcode( $atts ) {
 		return '';
 	}
 
-	if ( 'rd3_content_block' !== get_post_type( $block_id ) ) {
+	if (
+		'rd3_content_block'
+		!== get_post_type( $block_id )
+	) {
 		return '';
 	}
 
+
+	/*
+	 * Get Content Block title.
+	 */
+	$title = get_the_title(
+		$block_id
+	);
+
+
+	/*
+	 * Get Content Block content.
+	 */
 	$content = get_post_field(
 		'post_content',
 		$block_id
 	);
 
-	if ( '' === trim( $content ) ) {
+
+	/*
+	 * Get Link settings.
+	 */
+	$link_text = get_post_meta(
+		$block_id,
+		'_rd3_content_block_link_text',
+		true
+	);
+
+	$link_url = get_post_meta(
+		$block_id,
+		'_rd3_content_block_link_url',
+		true
+	);
+
+	$link_target = get_post_meta(
+		$block_id,
+		'_rd3_content_block_link_target',
+		true
+	);
+
+
+	/*
+	 * If the Content Block contains
+	 * no title, content or link,
+	 * do not render anything.
+	 */
+	if (
+		'' === trim( $content )
+		&&
+		'' === trim( $title )
+		&&
+		'' === trim( $link_text )
+		&&
+		'' === trim( $link_url )
+	) {
 		return '';
 	}
 
@@ -45,15 +97,129 @@ function rd3_content_block_shortcode( $atts ) {
 	 * Prevent Content Blocks containing
 	 * another Content Block.
 	 */
-	if ( has_shortcode( $content, 'rd3_block' ) ) {
+	if (
+		has_shortcode(
+			$content,
+			'rd3_block'
+		)
+	) {
 		return '';
+	}
+
+
+	/*
+	 * Validate link target.
+	 */
+	if (
+		! in_array(
+			$link_target,
+			array(
+				'_self',
+				'_blank',
+			),
+			true
+		)
+	) {
+
+		$link_target = '_self';
+	}
+
+
+	/*
+	 * Start Content Block wrapper.
+	 */
+	$output =
+		'<div class="rd3-content-block">';
+
+
+	/*
+	 * Render title.
+	 */
+	if (
+		'' !== trim( $title )
+	) {
+
+		$output .=
+			'<h2 class="rd3-content-block-title">';
+
+		$output .=
+			esc_html(
+				$title
+			);
+
+		$output .=
+			'</h2>';
 	}
 
 
 	/*
 	 * Render Content Block content.
 	 */
-	$output = do_shortcode( $content );
+	if (
+		'' !== trim( $content )
+	) {
+
+		$output .=
+			'<div class="rd3-content-block-content">';
+
+		$output .=
+			do_shortcode(
+				$content
+			);
+
+		$output .=
+			'</div>';
+	}
+
+
+	/*
+	 * Render optional link.
+	 *
+	 * The link only appears when both
+	 * Link Text and Link URL exist.
+	 */
+	if (
+		'' !== trim( $link_text )
+		&&
+		'' !== trim( $link_url )
+	) {
+
+		$output .=
+			'<div class="rd3-content-block-link">';
+
+		$output .=
+			'<a href="' .
+			esc_url( $link_url ) .
+			'" target="' .
+			esc_attr( $link_target ) .
+			'"';
+
+		/*
+		 * Security for New Tab.
+		 */
+		if (
+			'_blank'
+			=== $link_target
+		) {
+
+			$output .=
+				' rel="noopener noreferrer"';
+		}
+
+		$output .=
+			'>';
+
+		$output .=
+			esc_html(
+				$link_text
+			);
+
+		$output .=
+			'</a>';
+
+		$output .=
+			'</div>';
+	}
 
 
 	/*
@@ -96,6 +262,13 @@ function rd3_content_block_shortcode( $atts ) {
 	}
 
 
+	/*
+	 * Close Content Block wrapper.
+	 */
+	$output .=
+		'</div>';
+
+
 	return $output;
 }
 
@@ -111,6 +284,7 @@ add_shortcode(
  * ROW
  * ============================================================
  */
+
 function rd3_row_shortcode( $atts ) {
 
 	$atts = shortcode_atts(
@@ -127,7 +301,10 @@ function rd3_row_shortcode( $atts ) {
 		return '';
 	}
 
-	if ( 'rd3_row' !== get_post_type( $row_id ) ) {
+	if (
+		'rd3_row'
+		!== get_post_type( $row_id )
+	) {
 		return '';
 	}
 
@@ -243,7 +420,10 @@ function rd3_row_shortcode( $atts ) {
 		$positions as $position => $block_id
 	) {
 
-		$block_id = absint( $block_id );
+		$block_id =
+			absint(
+				$block_id
+			);
 
 		if ( ! $block_id ) {
 			continue;
@@ -251,7 +431,10 @@ function rd3_row_shortcode( $atts ) {
 
 		if (
 			'rd3_content_block'
-			!== get_post_type( $block_id )
+			!==
+			get_post_type(
+				$block_id
+			)
 		) {
 
 			continue;
@@ -260,9 +443,6 @@ function rd3_row_shortcode( $atts ) {
 
 		/*
 		 * Render Content Block.
-		 *
-		 * The Content Block shortcode handles
-		 * its own Edit Content Block link.
 		 */
 		$block_content =
 			do_shortcode(
@@ -296,13 +476,15 @@ function rd3_row_shortcode( $atts ) {
 	/*
 	 * Close actual Row.
 	 */
-	$output .= '</div>';
+	$output .=
+		'</div>';
 
 
 	/*
 	 * Close outer wrapper.
 	 */
-	$output .= '</div>';
+	$output .=
+		'</div>';
 
 
 	return $output;
@@ -325,6 +507,7 @@ add_shortcode(
  * [rd3_advanced_row brok="1" bett="1" prot="1" mana="1"]
  *
  */
+
 function rd3_advanced_row_shortcode( $atts ) {
 
 
@@ -725,13 +908,15 @@ function rd3_advanced_row_shortcode( $atts ) {
 	/*
 	 * Close actual Advanced Row.
 	 */
-	$output .= '</div>';
+	$output .=
+		'</div>';
 
 
 	/*
 	 * Close outer wrapper.
 	 */
-	$output .= '</div>';
+	$output .=
+		'</div>';
 
 
 	return $output;
