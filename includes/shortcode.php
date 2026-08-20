@@ -718,15 +718,23 @@ add_shortcode(
  *
  * Example:
  *
- * [rd3_advanced_row brok="1" bett="1" prot="1" mana="1"]
+ * [rd3_advanced_row id="2563" brok="1" bett="1" prot="1" mana="1"]
  *
  */
 
+
+/**
+ * Render an Advanced Row.
+ *
+ * The Advanced Row ID is supplied directly through the
+ * shortcode "id" attribute.
+ */
 function rd3_advanced_row_shortcode( $atts ) {
 
-
 	/*
-	 * Advanced Row uses dynamic attributes.
+	 * --------------------------------------------------------
+	 * NORMALISE ATTRIBUTES
+	 * --------------------------------------------------------
 	 */
 
 	if (
@@ -738,10 +746,6 @@ function rd3_advanced_row_shortcode( $atts ) {
 		return '';
 	}
 
-
-	/*
-	 * Sanitize attribute keys.
-	 */
 
 	$clean_atts = array();
 
@@ -762,23 +766,43 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Find Advanced Rows.
+	 * --------------------------------------------------------
+	 * GET ADVANCED ROW ID
+	 * --------------------------------------------------------
+	 *
+	 * Example:
+	 *
+	 * [rd3_advanced_row id="2563"]
+	 *
 	 */
 
-	$advanced_rows = get_posts(
-		array(
-			'post_type'      => 'rd3_advanced_row',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'orderby'        => 'ID',
-			'order'          => 'ASC',
+	$matched_row_id =
+		isset(
+			$atts['id']
 		)
-	);
+			? absint(
+				$atts['id']
+			)
+			: 0;
 
+
+	if ( ! $matched_row_id ) {
+
+		return '';
+	}
+
+
+	/*
+	 * --------------------------------------------------------
+	 * VALIDATE ADVANCED ROW
+	 * --------------------------------------------------------
+	 */
 
 	if (
-		empty(
-			$advanced_rows
+		'rd3_advanced_row'
+		!==
+		get_post_type(
+			$matched_row_id
 		)
 	) {
 
@@ -786,30 +810,63 @@ function rd3_advanced_row_shortcode( $atts ) {
 	}
 
 
-	$matched_blocks = array();
+	/*
+	 * Only published Advanced Rows
+	 * may be rendered.
+	 */
 
-	$matched_row_id = 0;
+	if (
+		'publish'
+		!==
+		get_post_status(
+			$matched_row_id
+		)
+	) {
+
+		return '';
+	}
 
 
 	/*
-	 * Find the Advanced Row containing
-	 * one of the supplied shortcode IDs.
+	 * --------------------------------------------------------
+	 * GET SAVED BLOCKS
+	 * --------------------------------------------------------
 	 */
 
-	foreach (
-		$advanced_rows as $advanced_row
-	) {
-
-		$saved_blocks = get_post_meta(
-			$advanced_row->ID,
+	$saved_blocks =
+		get_post_meta(
+			$matched_row_id,
 			'_rd3_advanced_row_blocks',
 			true
 		);
 
 
+	if (
+		! is_array(
+			$saved_blocks
+		)
+	) {
+
+		return '';
+	}
+
+
+	/*
+	 * --------------------------------------------------------
+	 * BUILD AVAILABLE BLOCKS
+	 * --------------------------------------------------------
+	 */
+
+	$matched_blocks = array();
+
+
+	foreach (
+		$saved_blocks as $position => $block
+	) {
+
 		if (
 			! is_array(
-				$saved_blocks
+				$block
 			)
 		) {
 
@@ -817,24 +874,8 @@ function rd3_advanced_row_shortcode( $atts ) {
 		}
 
 
-		$candidate_blocks = array();
-
-
-		foreach (
-			$saved_blocks as $position => $block
-		) {
-
-			if (
-				! is_array(
-					$block
-				)
-			) {
-
-				continue;
-			}
-
-
-			$block_id = isset(
+		$block_id =
+			isset(
 				$block['block_id']
 			)
 				? absint(
@@ -843,7 +884,8 @@ function rd3_advanced_row_shortcode( $atts ) {
 				: 0;
 
 
-			$shortcode_id = isset(
+		$shortcode_id =
+			isset(
 				$block['id']
 			)
 				? sanitize_key(
@@ -852,75 +894,50 @@ function rd3_advanced_row_shortcode( $atts ) {
 				: '';
 
 
-			if (
-				! $block_id
-				||
-				'' === $shortcode_id
-			) {
+		if (
+			! $block_id
+			||
+			'' === $shortcode_id
+		) {
 
-				continue;
-			}
-
-
-			if (
-				'rd3_content_block'
-				!==
-				get_post_type(
-					$block_id
-				)
-			) {
-
-				continue;
-			}
-
-
-			$candidate_blocks[
-				$shortcode_id
-			] = array(
-
-				'position' =>
-					absint(
-						$position
-					),
-
-				'block_id' =>
-					$block_id,
-			);
+			continue;
 		}
 
 
 		/*
-		 * Does this Advanced Row contain
-		 * one of the supplied shortcode IDs?
+		 * Make sure the referenced Content Block
+		 * still exists and is the correct post type.
 		 */
 
-		foreach (
-			$atts as $attribute => $value
+		if (
+			'rd3_content_block'
+			!==
+			get_post_type(
+				$block_id
+			)
 		) {
 
-			if (
-				isset(
-					$candidate_blocks[
-						$attribute
-					]
-				)
-			) {
-
-				$matched_blocks =
-					$candidate_blocks;
-
-				$matched_row_id =
-					$advanced_row->ID;
-
-				break 2;
-			}
+			continue;
 		}
+
+
+		$matched_blocks[
+			$shortcode_id
+		] = array(
+
+			'position' =>
+				absint(
+					$position
+				),
+
+			'block_id' =>
+				$block_id,
+
+		);
 	}
 
 
 	if (
-		! $matched_row_id
-		||
 		empty(
 			$matched_blocks
 		)
@@ -931,19 +948,18 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Get saved layout.
+	 * --------------------------------------------------------
+	 * GET SAVED LAYOUT
+	 * --------------------------------------------------------
 	 */
 
-	$layout = get_post_meta(
-		$matched_row_id,
-		'_rd3_advanced_row_layout',
-		true
-	);
+	$layout =
+		get_post_meta(
+			$matched_row_id,
+			'_rd3_advanced_row_layout',
+			true
+		);
 
-
-	/*
-	 * Default to inline.
-	 */
 
 	if (
 		! in_array(
@@ -961,7 +977,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Sort blocks by position.
+	 * --------------------------------------------------------
+	 * SORT BLOCKS BY POSITION
+	 * --------------------------------------------------------
 	 */
 
 	uasort(
@@ -971,7 +989,8 @@ function rd3_advanced_row_shortcode( $atts ) {
 			$b
 		) {
 
-			return $a['position']
+			return
+				$a['position']
 				<=>
 				$b['position'];
 		}
@@ -979,7 +998,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Create Row class.
+	 * --------------------------------------------------------
+	 * CREATE ROW CLASS
+	 * --------------------------------------------------------
 	 */
 
 	$row_class =
@@ -988,7 +1009,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Create outer wrapper.
+	 * --------------------------------------------------------
+	 * CREATE OUTER WRAPPER
+	 * --------------------------------------------------------
 	 */
 
 	$output =
@@ -996,7 +1019,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Add Edit Advanced Row link.
+	 * --------------------------------------------------------
+	 * ADD EDIT ADVANCED ROW LINK
+	 * --------------------------------------------------------
 	 */
 
 	if (
@@ -1008,10 +1033,11 @@ function rd3_advanced_row_shortcode( $atts ) {
 		)
 	) {
 
-		$edit_url = get_edit_post_link(
-			$matched_row_id,
-			''
-		);
+		$edit_url =
+			get_edit_post_link(
+				$matched_row_id,
+				''
+			);
 
 
 		if ( $edit_url ) {
@@ -1043,7 +1069,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Create actual Advanced Row.
+	 * --------------------------------------------------------
+	 * CREATE ACTUAL ADVANCED ROW
+	 * --------------------------------------------------------
 	 */
 
 	$output .=
@@ -1062,7 +1090,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Render selected Content Blocks.
+	 * --------------------------------------------------------
+	 * RENDER SELECTED CONTENT BLOCKS
+	 * --------------------------------------------------------
 	 */
 
 	foreach (
@@ -1107,6 +1137,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 		if ( ! $block_id ) {
+
 			continue;
 		}
 
@@ -1150,7 +1181,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Don't output an empty Advanced Row.
+	 * --------------------------------------------------------
+	 * DON'T OUTPUT EMPTY ADVANCED ROW
+	 * --------------------------------------------------------
 	 */
 
 	if ( ! $has_content ) {
@@ -1160,7 +1193,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Close actual Advanced Row.
+	 * --------------------------------------------------------
+	 * CLOSE ACTUAL ADVANCED ROW
+	 * --------------------------------------------------------
 	 */
 
 	$output .=
@@ -1168,7 +1203,9 @@ function rd3_advanced_row_shortcode( $atts ) {
 
 
 	/*
-	 * Close outer wrapper.
+	 * --------------------------------------------------------
+	 * CLOSE OUTER WRAPPER
+	 * --------------------------------------------------------
 	 */
 
 	$output .=

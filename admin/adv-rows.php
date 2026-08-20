@@ -113,13 +113,16 @@ function rd3_advanced_row_settings_meta_box( $post ) {
 	/*
 	 * Get saved blocks.
 	 */
+
 	$blocks = get_post_meta(
 		$post->ID,
 		'_rd3_advanced_row_blocks',
 		true
 	);
 
+
 	if ( ! is_array( $blocks ) ) {
+
 		$blocks = array();
 	}
 
@@ -127,20 +130,24 @@ function rd3_advanced_row_settings_meta_box( $post ) {
 	/*
 	 * Get saved layout.
 	 */
+
 	$layout = get_post_meta(
 		$post->ID,
 		'_rd3_advanced_row_layout',
 		true
 	);
 
-	if ( ! in_array(
-		$layout,
-		array(
-			'inline',
-			'stacked',
-		),
-		true
-	) ) {
+
+	if (
+		! in_array(
+			$layout,
+			array(
+				'inline',
+				'stacked',
+			),
+			true
+		)
+	) {
 
 		$layout = 'inline';
 	}
@@ -149,6 +156,7 @@ function rd3_advanced_row_settings_meta_box( $post ) {
 	/*
 	 * Get published Content Blocks.
 	 */
+
 	$available_blocks = get_posts(
 		array(
 			'post_type'      => 'rd3_content_block',
@@ -163,6 +171,7 @@ function rd3_advanced_row_settings_meta_box( $post ) {
 	/*
 	 * Default shortcode IDs.
 	 */
+
 	$defaults = array(
 		1 => 'brok',
 		2 => 'bett',
@@ -175,6 +184,7 @@ function rd3_advanced_row_settings_meta_box( $post ) {
 	/*
 	 * Fill missing settings.
 	 */
+
 	for ( $i = 1; $i <= 5; $i++ ) {
 
 		if (
@@ -190,18 +200,26 @@ function rd3_advanced_row_settings_meta_box( $post ) {
 		}
 
 
-		if ( ! isset( $blocks[ $i ]['block_id'] ) ) {
+		if (
+			! isset(
+				$blocks[ $i ]['block_id']
+			)
+		) {
+
 			$blocks[ $i ]['block_id'] = '';
 		}
 
 
 		if (
-			! isset( $blocks[ $i ]['id'] )
+			! isset(
+				$blocks[ $i ]['id']
+			)
 			||
 			'' === $blocks[ $i ]['id']
 		) {
 
-			$blocks[ $i ]['id'] = $defaults[ $i ];
+			$blocks[ $i ]['id'] =
+				$defaults[ $i ];
 		}
 	}
 
@@ -209,318 +227,325 @@ function rd3_advanced_row_settings_meta_box( $post ) {
 	/*
 	 * Current page setting.
 	 */
+
 	$hide_current = get_post_meta(
 		$post->ID,
 		'_rd3_advanced_row_hide_current',
 		true
 	);
 
+
 	if ( '' === $hide_current ) {
+
 		$hide_current = 1;
 	}
 
 	?>
-<p>
 
-	<strong>
-		Configure the Content Blocks available to this Advanced Row.
-	</strong>
-
-</p>
-
-<p>
-	Select an existing Content Block for each position and give it
-	a shortcode ID of up to 4 characters.
-</p>
-
-
-<hr>
-
-
-<h3>
-	Layout
-</h3>
-
-
-<p>
-	Select how the Content Blocks should be displayed.
-</p>
-
-
-<p>
-
-	<label style="margin-right:20px;">
-
-		<input
-			type="radio"
-			name="rd3_advanced_row_layout"
-			value="inline"
-			<?php checked(
-				$layout,
-				'inline'
-			); ?>
-		>
+	<p>
 
 		<strong>
-			Inline
+			Configure the Content Blocks available to this Advanced Row.
 		</strong>
 
-	</label>
+	</p>
+
+	<p>
+		Select an existing Content Block for each position and give it
+		a shortcode ID of up to 4 characters.
+	</p>
 
 
-	<label>
-
-		<input
-			type="radio"
-			name="rd3_advanced_row_layout"
-			value="stacked"
-			<?php checked(
-				$layout,
-				'stacked'
-			); ?>
-		>
-
-		<strong>
-			Stacked
-		</strong>
-
-	</label>
-
-</p>
+	<hr>
 
 
-<hr>
+	<h3>
+		Layout
+	</h3>
 
 
-<h3>
-	Content Blocks
-</h3>
+	<p>
+		Select how the Content Blocks should be displayed.
+	</p>
 
 
-<table
-	class="widefat striped"
-	style="max-width:900px;"
->
+	<p>
 
-	<thead>
+		<label style="margin-right:20px;">
 
-		<tr>
+			<input
+				type="radio"
+				name="rd3_advanced_row_layout"
+				value="inline"
+				<?php checked(
+					$layout,
+					'inline'
+				); ?>
+			>
 
-			<th style="width:65%;">
-				Content Block
-			</th>
+			<strong>
+				Inline
+			</strong>
 
-			<th style="width:35%;">
-				Shortcode ID
-			</th>
-
-		</tr>
-
-	</thead>
+		</label>
 
 
-	<tbody>
+		<label>
 
-		<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+			<input
+				type="radio"
+				name="rd3_advanced_row_layout"
+				value="stacked"
+				<?php checked(
+					$layout,
+					'stacked'
+				); ?>
+			>
+
+			<strong>
+				Stacked
+			</strong>
+
+		</label>
+
+	</p>
+
+
+	<hr>
+
+
+	<h3>
+		Content Blocks
+	</h3>
+
+
+	<table
+		class="widefat striped"
+		style="max-width:900px;"
+	>
+
+		<thead>
 
 			<tr>
 
-				<td
-					style="
-						border-left:1px solid #000;
-						padding:12px;
-						vertical-align:middle;
-					"
-				>
+				<th style="width:65%;">
+					Content Block
+				</th>
 
-					<strong
-						style="
-							display:block;
-							margin-bottom:6px;
-						"
-					>
-						Position <?php echo esc_html( $i ); ?>
-					</strong>
-
-
-					<select
-						id="rd3_advanced_row_block_<?php echo esc_attr( $i ); ?>"
-						name="rd3_advanced_row_blocks[<?php echo esc_attr( $i ); ?>][block_id]"
-						style="
-							width:100%;
-							max-width:500px;
-						"
-					>
-
-						<option value="">
-							— Remove Content Block —
-						</option>
-
-
-						<?php foreach ( $available_blocks as $available_block ) : ?>
-
-							<option
-								value="<?php echo esc_attr(
-									$available_block->ID
-								); ?>"
-								<?php selected(
-									$blocks[ $i ]['block_id'],
-									$available_block->ID
-								); ?>
-							>
-
-								<?php
-								echo esc_html(
-									$available_block->post_title
-								);
-								?>
-
-							</option>
-
-						<?php endforeach; ?>
-
-					</select>
-
-				</td>
-
-
-				<td
-					style="
-						border-right:1px solid #000;
-						padding:12px;
-						vertical-align:bottom;
-						white-space:nowrap;
-					"
-				>
-
-					<span
-						style="
-							font-size:18px;
-							font-weight:bold;
-							margin-right:8px;
-							vertical-align:middle;
-						"
-						aria-hidden="true"
-					>
-						=
-					</span>
-
-
-					<input
-						type="text"
-						name="rd3_advanced_row_blocks[<?php echo esc_attr( $i ); ?>][id]"
-						value="<?php echo esc_attr(
-							$blocks[ $i ]['id']
-						); ?>"
-						maxlength="4"
-						class="small-text"
-						style="vertical-align:middle;"
-					>
-
-				</td>
+				<th style="width:35%;">
+					Shortcode ID
+				</th>
 
 			</tr>
 
-		<?php endfor; ?>
-
-	</tbody>
-
-</table>
+		</thead>
 
 
-<?php if ( empty( $available_blocks ) ) : ?>
+		<tbody>
 
-	<div
-		class="notice notice-warning inline"
-		style="margin:15px 0;"
-	>
+			<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
 
-		<p>
+				<tr>
 
-			<strong>
-				No Content Blocks are available.
-			</strong>
+					<td
+						style="
+							border-left:1px solid #000;
+							padding:12px;
+							vertical-align:middle;
+						"
+					>
 
-		</p>
+						<strong
+							style="
+								display:block;
+								margin-bottom:6px;
+							"
+						>
 
-		<p>
-			Create and publish a Content Block before adding it
-			to an Advanced Row.
-		</p>
+							Position
+							<?php echo esc_html( $i ); ?>
 
-	</div>
-
-<?php endif; ?>
-
-
-<hr>
-
-
-<h3>
-	Conditional Display
-</h3>
+						</strong>
 
 
-<p>
+						<select
+							id="rd3_advanced_row_block_<?php echo esc_attr( $i ); ?>"
+							name="rd3_advanced_row_blocks[<?php echo esc_attr( $i ); ?>][block_id]"
+							style="
+								width:100%;
+								max-width:500px;
+							"
+						>
 
-	<label>
+							<option value="">
+								— Remove Content Block —
+							</option>
 
-		<input
-			type="checkbox"
-			name="rd3_advanced_row_hide_current"
-			value="1"
-			<?php checked(
-				$hide_current,
-				1
-			); ?>
+
+							<?php foreach ( $available_blocks as $available_block ) : ?>
+
+								<option
+									value="<?php echo esc_attr(
+										$available_block->ID
+									); ?>"
+									<?php selected(
+										$blocks[ $i ]['block_id'],
+										$available_block->ID
+									); ?>
+								>
+
+									<?php
+									echo esc_html(
+										$available_block->post_title
+									);
+									?>
+
+								</option>
+
+							<?php endforeach; ?>
+
+						</select>
+
+					</td>
+
+
+					<td
+						style="
+							border-right:1px solid #000;
+							padding:12px;
+							vertical-align:bottom;
+							white-space:nowrap;
+						"
+					>
+
+						<span
+							style="
+								font-size:18px;
+								font-weight:bold;
+								margin-right:8px;
+								vertical-align:middle;
+							"
+							aria-hidden="true"
+						>
+							=
+						</span>
+
+
+						<input
+							type="text"
+							name="rd3_advanced_row_blocks[<?php echo esc_attr( $i ); ?>][id]"
+							value="<?php echo esc_attr(
+								$blocks[ $i ]['id']
+							); ?>"
+							maxlength="4"
+							class="small-text"
+							style="vertical-align:middle;"
+						>
+
+					</td>
+
+				</tr>
+
+			<?php endfor; ?>
+
+		</tbody>
+
+	</table>
+
+
+	<?php if ( empty( $available_blocks ) ) : ?>
+
+		<div
+			class="notice notice-warning inline"
+			style="margin:15px 0;"
 		>
 
-		Hide the block that links to the current page
+			<p>
 
-	</label>
+				<strong>
+					No Content Blocks are available.
+				</strong>
 
-</p>
+			</p>
 
+			<p>
+				Create and publish a Content Block before adding it
+				to an Advanced Row.
+			</p>
 
-<hr>
+		</div>
 
-
-<h3>
-	Shortcode
-</h3>
-
-
-<p>
-	Use the block IDs to control which blocks are displayed.
-</p>
+	<?php endif; ?>
 
 
-<p>
-	<strong>
-		IDs can have a maximum of 4 characters.
-	</strong>
-</p>
+	<hr>
 
 
-<p>
-
-	<code>
-		[rd3_advanced_row brok="1" bett="1" prot="1" mana="1"]
-	</code>
-
-</p>
+	<h3>
+		Conditional Display
+	</h3>
 
 
-<p>
-	Use <strong>1</strong> to show a block and
-	<strong>0</strong> to hide it.
-</p>
+	<p>
+
+		<label>
+
+			<input
+				type="checkbox"
+				name="rd3_advanced_row_hide_current"
+				value="1"
+				<?php checked(
+					$hide_current,
+					1
+				); ?>
+			>
+
+			Hide the block that links to the current page
+
+		</label>
+
+	</p>
 
 
-<p>
-	The Advanced Row uses existing Content Blocks.
-	It does not contain Content Block content itself.
-</p>
+	<hr>
+
+
+	<h3>
+		Shortcode
+	</h3>
+
+
+	<p>
+		Use the block IDs to control which blocks are displayed.
+	</p>
+
+
+	<p>
+		<strong>
+			IDs can have a maximum of 4 characters.
+		</strong>
+	</p>
+
+
+	<p>
+
+		<code>
+			[rd3_advanced_row id="<?php echo esc_attr( $post->ID ); ?>" brok="1" bett="1" prot="1" mana="1"]
+		</code>
+
+	</p>
+
+
+	<p>
+		Use <strong>1</strong> to show a block and
+		<strong>0</strong> to hide it.
+	</p>
+
+
+	<p>
+		The Advanced Row uses existing Content Blocks.
+		It does not contain Content Block content itself.
+	</p>
 
 	<?php
 }
@@ -546,7 +571,11 @@ function rd3_advanced_row_save_settings( $post_id ) {
 
 	if (
 		! wp_verify_nonce(
-			$_POST['rd3_advanced_row_nonce'],
+			sanitize_text_field(
+				wp_unslash(
+					$_POST['rd3_advanced_row_nonce']
+				)
+			),
 			'rd3_advanced_row_save'
 		)
 	) {
@@ -578,7 +607,10 @@ function rd3_advanced_row_save_settings( $post_id ) {
 
 	if (
 		'rd3_advanced_row'
-		!== get_post_type( $post_id )
+		!==
+		get_post_type(
+			$post_id
+		)
 	) {
 
 		return;
@@ -588,15 +620,17 @@ function rd3_advanced_row_save_settings( $post_id ) {
 	/*
 	 * Save layout.
 	 */
-	$layout = isset(
-		$_POST['rd3_advanced_row_layout']
-	)
-		? sanitize_key(
-			wp_unslash(
-				$_POST['rd3_advanced_row_layout']
-			)
+
+	$layout =
+		isset(
+			$_POST['rd3_advanced_row_layout']
 		)
-		: 'inline';
+			? sanitize_key(
+				wp_unslash(
+					$_POST['rd3_advanced_row_layout']
+				)
+			)
+			: 'inline';
 
 
 	if (
@@ -624,6 +658,7 @@ function rd3_advanced_row_save_settings( $post_id ) {
 	/*
 	 * Save blocks.
 	 */
+
 	$blocks = array();
 
 
@@ -642,9 +677,10 @@ function rd3_advanced_row_save_settings( $post_id ) {
 			as $position => $block
 		) {
 
-			$position = absint(
-				$position
-			);
+			$position =
+				absint(
+					$position
+				);
 
 
 			if (
@@ -660,23 +696,27 @@ function rd3_advanced_row_save_settings( $post_id ) {
 			/*
 			 * Selected Content Block.
 			 */
-			$block_id = isset(
-				$block['block_id']
-			)
-				? absint(
+
+			$block_id =
+				isset(
 					$block['block_id']
 				)
-				: 0;
+					? absint(
+						$block['block_id']
+					)
+					: 0;
 
 
 			/*
 			 * Validate Content Block.
 			 */
+
 			if (
 				$block_id
 				&&
 				'rd3_content_block'
-				!== get_post_type(
+				!==
+				get_post_type(
 					$block_id
 				)
 			) {
@@ -688,30 +728,35 @@ function rd3_advanced_row_save_settings( $post_id ) {
 			/*
 			 * Shortcode ID.
 			 */
-			$id = isset(
-				$block['id']
-			)
-				? sanitize_key(
-					wp_unslash(
-						$block['id']
-					)
+
+			$id =
+				isset(
+					$block['id']
 				)
-				: '';
+					? sanitize_key(
+						wp_unslash(
+							$block['id']
+						)
+					)
+					: '';
 
 
 			/*
 			 * Maximum 4 characters.
 			 */
-			$id = substr(
-				$id,
-				0,
-				4
-			);
+
+			$id =
+				substr(
+					$id,
+					0,
+					4
+				);
 
 
 			/*
 			 * Don't save empty positions.
 			 */
+
 			if (
 				! $block_id
 				||
@@ -722,13 +767,16 @@ function rd3_advanced_row_save_settings( $post_id ) {
 			}
 
 
-			$blocks[ $position ] = array(
+			$blocks[ $position ] =
+				array(
 
-				'block_id' => $block_id,
+					'block_id' =>
+						$block_id,
 
-				'id' => $id,
+					'id' =>
+						$id,
 
-			);
+				);
 		}
 	}
 
@@ -743,11 +791,13 @@ function rd3_advanced_row_save_settings( $post_id ) {
 	/*
 	 * Save current-page behaviour.
 	 */
-	$hide_current = isset(
-		$_POST['rd3_advanced_row_hide_current']
-	)
-		? 1
-		: 0;
+
+	$hide_current =
+		isset(
+			$_POST['rd3_advanced_row_hide_current']
+		)
+			? 1
+			: 0;
 
 
 	update_post_meta(
@@ -771,7 +821,8 @@ add_action(
 
 function rd3_advanced_row_shortcode_column( $columns ) {
 
-	$columns['rd3_shortcode'] = 'Shortcode';
+	$columns['rd3_shortcode'] =
+		'Shortcode';
 
 	return $columns;
 }
@@ -779,6 +830,26 @@ function rd3_advanced_row_shortcode_column( $columns ) {
 add_filter(
 	'manage_rd3_advanced_row_posts_columns',
 	'rd3_advanced_row_shortcode_column'
+);
+
+
+/*
+ * ============================================================
+ * USED ON COLUMN
+ * ============================================================
+ */
+
+function rd3_advanced_row_used_on_column( $columns ) {
+
+	$columns['rd3_used_on'] =
+		'Used On';
+
+	return $columns;
+}
+
+add_filter(
+	'manage_rd3_advanced_row_posts_columns',
+	'rd3_advanced_row_used_on_column'
 );
 
 
@@ -794,32 +865,42 @@ function rd3_advanced_row_shortcode_column_content(
 ) {
 
 	if (
-		'rd3_shortcode' !== $column
+		'rd3_shortcode'
+		!==
+		$column
 	) {
 
 		return;
 	}
 
 
-	$blocks = get_post_meta(
-		$post_id,
-		'_rd3_advanced_row_blocks',
-		true
-	);
+	$blocks =
+		get_post_meta(
+			$post_id,
+			'_rd3_advanced_row_blocks',
+			true
+		);
 
 
 	if (
-		! is_array( $blocks )
+		! is_array(
+			$blocks
+		)
 	) {
 
 		return;
 	}
 
 
-	$attributes = array();
+	$attributes =
+		array();
 
 
-	for ( $i = 1; $i <= 5; $i++ ) {
+	for (
+		$i = 1;
+		$i <= 5;
+		$i++
+	) {
 
 		if (
 			empty(
@@ -831,9 +912,10 @@ function rd3_advanced_row_shortcode_column_content(
 		}
 
 
-		$id = sanitize_key(
-			$blocks[ $i ]['id']
-		);
+		$id =
+			sanitize_key(
+				$blocks[ $i ]['id']
+			);
 
 
 		if (
@@ -849,7 +931,11 @@ function rd3_advanced_row_shortcode_column_content(
 	}
 
 
-	if ( empty( $attributes ) ) {
+	if (
+		empty(
+			$attributes
+		)
+	) {
 
 		echo '<span style="color:#777;">';
 		echo 'Configure block IDs';
@@ -859,8 +945,16 @@ function rd3_advanced_row_shortcode_column_content(
 	}
 
 
+	/*
+	 * Include the Advanced Row post ID.
+	 */
+
 	$shortcode =
-		'[rd3_advanced_row ' .
+		'[rd3_advanced_row id="' .
+		absint(
+			$post_id
+		) .
+		'" ' .
 		implode(
 			' ',
 			$attributes
@@ -898,6 +992,273 @@ add_action(
 
 
 /*
+/*
+ * ============================================================
+ * DISPLAY USED ON
+ * ============================================================
+ */
+
+function rd3_advanced_row_used_on_column_content(
+	$column,
+	$post_id
+) {
+
+	if (
+		'rd3_used_on'
+		!==
+		$column
+	) {
+
+		return;
+	}
+
+
+	global $wpdb;
+
+
+	/*
+	 * --------------------------------------------------------
+	 * Find published posts/pages containing an Advanced Row
+	 * shortcode.
+	 * --------------------------------------------------------
+	 *
+	 * We deliberately search for the shortcode name first,
+	 * then inspect the actual content for this specific ID.
+	 *
+	 * This avoids problems with:
+	 *
+	 * - single quotes
+	 * - double quotes
+	 * - spacing
+	 * - block editor formatting
+	 * - shortcode attributes
+	 *
+	 */
+
+	$posts =
+		$wpdb->get_results(
+			"
+			SELECT
+				ID,
+				post_title,
+				post_type,
+				post_content
+			FROM {$wpdb->posts}
+			WHERE post_status = 'publish'
+			AND post_type NOT IN (
+				'rd3_advanced_row',
+				'revision',
+				'nav_menu_item'
+			)
+			AND post_content LIKE '%[rd3_advanced_row%'
+			ORDER BY post_title ASC
+			"
+		);
+
+
+	/*
+	 * --------------------------------------------------------
+	 * Advanced Row ID.
+	 * --------------------------------------------------------
+	 */
+
+	$row_id =
+		absint(
+			$post_id
+		);
+
+
+	if ( ! $row_id ) {
+
+		echo '<span style="color:#777;">';
+		echo 'Not used';
+		echo '</span>';
+
+		return;
+	}
+
+
+	/*
+	 * --------------------------------------------------------
+	 * Find actual matches.
+	 * --------------------------------------------------------
+	 */
+
+	$matches = array();
+
+
+	foreach (
+		$posts as $used_post
+	) {
+
+		$content =
+			(string)
+			$used_post->post_content;
+
+
+		/*
+		 * Look specifically for:
+		 *
+		 * [rd3_advanced_row ... id="2563"
+		 *
+		 * or:
+		 *
+		 * [rd3_advanced_row ... id='2563'
+		 *
+		 * Allow any attributes and whitespace
+		 * between the shortcode name and ID.
+		 */
+
+		$pattern =
+			'/\[rd3_advanced_row\b[^\]]*\bid\s*=\s*([\'"])' .
+			preg_quote(
+				(string) $row_id,
+				'/'
+			) .
+			'\1[^\]]*\]/i';
+
+
+		if (
+			preg_match(
+				$pattern,
+				$content
+			)
+		) {
+
+			$matches[] =
+				$used_post;
+		}
+	}
+
+
+	/*
+	 * --------------------------------------------------------
+	 * Nothing found.
+	 * --------------------------------------------------------
+	 */
+
+	if (
+		empty(
+			$matches
+		)
+	) {
+
+		echo '<span style="color:#777;">';
+		echo 'Not used';
+		echo '</span>';
+
+		return;
+	}
+
+
+	/*
+	 * --------------------------------------------------------
+	 * Display locations.
+	 * --------------------------------------------------------
+	 */
+
+	foreach (
+		$matches as $used_on
+	) {
+
+		$edit_url =
+			get_edit_post_link(
+				$used_on->ID,
+				''
+			);
+
+
+		/*
+		 * Determine post type label.
+		 */
+
+		$post_type_object =
+			get_post_type_object(
+				$used_on->post_type
+			);
+
+
+		$post_type_label =
+			$post_type_object
+				? $post_type_object->labels->singular_name
+				: ucfirst(
+					$used_on->post_type
+				);
+
+
+		?>
+
+		<div
+			style="
+				margin-bottom:8px;
+			"
+		>
+
+			<?php if ( $edit_url ) : ?>
+
+				<a
+					href="<?php echo esc_url( $edit_url ); ?>"
+				>
+
+					<strong>
+
+						<?php
+						echo esc_html(
+							$used_on->post_title
+						);
+						?>
+
+					</strong>
+
+				</a>
+
+			<?php else : ?>
+
+				<strong>
+
+					<?php
+					echo esc_html(
+						$used_on->post_title
+					);
+					?>
+
+				</strong>
+
+			<?php endif; ?>
+
+
+			<br>
+
+
+			<span
+				style="
+					color:#777;
+				"
+			>
+
+				<?php
+				echo esc_html(
+					$post_type_label
+				);
+				?>
+
+			</span>
+
+		</div>
+
+		<?php
+	}
+}
+
+
+add_action(
+	'manage_rd3_advanced_row_posts_custom_column',
+	'rd3_advanced_row_used_on_column_content',
+	10,
+	2
+);
+
+/*
  * ============================================================
  * COPY SHORTCODE
  * ============================================================
@@ -922,7 +1283,8 @@ function rd3_advanced_row_copy_shortcode_script() {
 			}
 
 
-			var button = event.target;
+			var button =
+				event.target;
 
 
 			var shortcode =
@@ -931,7 +1293,10 @@ function rd3_advanced_row_copy_shortcode_script() {
 				);
 
 
-			if ( ! shortcode ) {
+			if (
+				! shortcode
+			) {
+
 				return;
 			}
 
@@ -1017,6 +1382,7 @@ function rd3_advanced_row_copy_shortcode_script() {
 		textarea.style.position =
 			'fixed';
 
+
 		textarea.style.opacity =
 			'0';
 
@@ -1040,7 +1406,9 @@ function rd3_advanced_row_copy_shortcode_script() {
 		textarea.remove();
 
 
-		if ( successful ) {
+		if (
+			successful
+		) {
 
 			rd3_advanced_row_copy_success(
 				button
