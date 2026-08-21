@@ -816,3 +816,263 @@ add_action(
 	'save_post_rd3_content_block',
 	'rd3_content_block_save_link_settings'
 );
+
+
+/*
+ * ============================================================
+ * SHORTCODE COLUMN
+ * ============================================================
+ */
+
+/*
+ * Add Shortcode column to Content Blocks.
+ */
+function rd3_content_block_shortcode_column(
+	$columns
+) {
+
+	$columns['rd3_shortcode'] =
+		'Shortcode';
+
+	return $columns;
+}
+
+add_filter(
+	'manage_rd3_content_block_posts_columns',
+	'rd3_content_block_shortcode_column'
+);
+
+
+/*
+ * Display Content Block shortcode.
+ */
+function rd3_content_block_shortcode_column_content(
+	$column,
+	$post_id
+) {
+
+	if (
+		'rd3_shortcode'
+		!==
+		$column
+	) {
+
+		return;
+	}
+
+
+	$shortcode =
+		'[rd3_block id="' .
+		absint(
+			$post_id
+		) .
+		'"]';
+
+	?>
+
+	<code>
+		<?php
+		echo esc_html(
+			$shortcode
+		);
+		?>
+	</code>
+
+	<button
+		type="button"
+		class="button rd3-copy-content-block-shortcode"
+		data-shortcode="<?php echo esc_attr( $shortcode ); ?>"
+		style="margin-left:5px;"
+	>
+		Copy
+	</button>
+
+	<?php
+}
+
+add_action(
+	'manage_rd3_content_block_posts_custom_column',
+	'rd3_content_block_shortcode_column_content',
+	10,
+	2
+);
+
+
+/*
+ * ============================================================
+ * COPY CONTENT BLOCK SHORTCODE
+ * ============================================================
+ */
+
+function rd3_content_block_copy_shortcode_script() {
+	?>
+
+	<script>
+
+	document.addEventListener(
+		'click',
+		function( event ) {
+
+			if (
+				! event.target.classList.contains(
+					'rd3-copy-content-block-shortcode'
+				)
+			) {
+
+				return;
+			}
+
+
+			var button =
+				event.target;
+
+
+			var shortcode =
+				button.getAttribute(
+					'data-shortcode'
+				);
+
+
+			if (
+				! shortcode
+			) {
+
+				return;
+			}
+
+
+			if (
+				navigator.clipboard &&
+				navigator.clipboard.writeText
+			) {
+
+				navigator.clipboard.writeText(
+					shortcode
+				).then(
+					function() {
+
+						rd3_content_block_copy_success(
+							button
+						);
+
+					}
+				).catch(
+					function() {
+
+						rd3_content_block_copy_fallback(
+							button,
+							shortcode
+						);
+
+					}
+				);
+
+				return;
+			}
+
+
+			rd3_content_block_copy_fallback(
+				button,
+				shortcode
+			);
+		}
+	);
+
+
+	/*
+	 * Show successful copy.
+	 */
+	function rd3_content_block_copy_success(
+		button
+	) {
+
+		var original =
+			button.textContent;
+
+
+		button.textContent =
+			'Copied';
+
+
+		setTimeout(
+			function() {
+
+				button.textContent =
+					original;
+
+			},
+			1500
+		);
+	}
+
+
+	/*
+	 * Clipboard fallback.
+	 */
+	function rd3_content_block_copy_fallback(
+		button,
+		shortcode
+	) {
+
+		var textarea =
+			document.createElement(
+				'textarea'
+			);
+
+
+		textarea.value =
+			shortcode;
+
+
+		textarea.style.position =
+			'fixed';
+
+
+		textarea.style.opacity =
+			'0';
+
+
+		document.body.appendChild(
+			textarea
+		);
+
+
+		textarea.focus();
+
+		textarea.select();
+
+
+		var successful =
+			document.execCommand(
+				'copy'
+			);
+
+
+		textarea.remove();
+
+
+		if (
+			successful
+		) {
+
+			rd3_content_block_copy_success(
+				button
+			);
+
+		} else {
+
+			alert(
+				'Unable to copy the Content Block shortcode.'
+			);
+		}
+	}
+
+	</script>
+
+	<?php
+}
+
+add_action(
+	'admin_footer',
+	'rd3_content_block_copy_shortcode_script'
+);

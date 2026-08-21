@@ -24,6 +24,7 @@ require_once plugin_dir_path( __FILE__ ) . 'rows.php';
  */
 require_once plugin_dir_path( __FILE__ ) . 'adv-rows.php';
 
+
 /*
  * Load Advanced Row Page/Post selector.
  */
@@ -35,17 +36,27 @@ require_once plugin_dir_path( __FILE__ ) . 'advanced-row-page-selector.php';
  */
 require_once plugin_dir_path( __FILE__ ) . 'editor.php';
 
+
 /*
  * Load How to Use administration.
  */
 require_once plugin_dir_path( __FILE__ ) . 'help.php';
 
 
-
 /*
- * Load Usage / Help administration.
+ * Load usage functions.
  */
 require_once plugin_dir_path( __FILE__ ) . 'usage.php';
+
+
+/*
+ * Load Used On columns and sorting.
+ *
+ * This file must be loaded after usage.php because
+ * it uses the usage functions defined there.
+ */
+require_once plugin_dir_path( __FILE__ ) . 'sort.php';
+
 
 /*
  * Register RD3 Content Blocks admin menu.
@@ -101,3 +112,5 @@ function rd3_content_blocks_admin_page() {
 
     exit;
 }
+
+

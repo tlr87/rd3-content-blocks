@@ -8,8 +8,11 @@
 
 
 /*
- * Register RD3 Row post type.
+ * =========================================================
+ * REGISTER ROW POST TYPE
+ * =========================================================
  */
+
 function rd3_register_row_post_type() {
 
     register_post_type(
@@ -80,8 +83,11 @@ add_action(
 
 
 /*
- * Add Row settings meta box.
+ * =========================================================
+ * ADD ROW SETTINGS META BOX
+ * =========================================================
  */
+
 function rd3_row_add_meta_box() {
 
     add_meta_box(
@@ -101,8 +107,11 @@ add_action(
 
 
 /*
- * Display Row settings.
+ * =========================================================
+ * DISPLAY ROW SETTINGS
+ * =========================================================
  */
+
 function rd3_row_settings_meta_box(
     $post
 ) {
@@ -121,7 +130,16 @@ function rd3_row_settings_meta_box(
         );
 
 
-    if ( ! $layout ) {
+    if (
+        ! in_array(
+            $layout,
+            array(
+                'inline',
+                'stacked',
+            ),
+            true
+        )
+    ) {
 
         $layout =
             'inline';
@@ -355,8 +373,11 @@ function rd3_row_settings_meta_box(
 
 
 /*
- * Save Row settings.
+ * =========================================================
+ * SAVE ROW SETTINGS
+ * =========================================================
  */
+
 function rd3_row_save_settings(
     $post_id
 ) {
@@ -376,7 +397,11 @@ function rd3_row_save_settings(
 
     if (
         ! wp_verify_nonce(
-            $_POST['rd3_row_nonce'],
+            sanitize_text_field(
+                wp_unslash(
+                    $_POST['rd3_row_nonce']
+                )
+            ),
             'rd3_row_save'
         )
     ) {
@@ -415,13 +440,28 @@ function rd3_row_save_settings(
 
 
     /*
+     * Confirm post type.
+     */
+    if (
+        'rd3_row'
+        !==
+        get_post_type(
+            $post_id
+        )
+    ) {
+
+        return;
+    }
+
+
+    /*
      * Save layout.
      */
     $layout =
         isset(
             $_POST['rd3_row_layout']
         )
-            ? sanitize_text_field(
+            ? sanitize_key(
                 wp_unslash(
                     $_POST['rd3_row_layout']
                 )
@@ -510,7 +550,8 @@ function rd3_row_save_settings(
              */
             if (
                 'rd3_content_block'
-                !== get_post_type(
+                !==
+                get_post_type(
                     $block_id
                 )
             ) {
@@ -519,9 +560,7 @@ function rd3_row_save_settings(
             }
 
 
-            $positions[
-                $position
-            ] =
+            $positions[ $position ] =
                 $block_id;
         }
     }
@@ -541,8 +580,11 @@ add_action(
 
 
 /*
- * Add Shortcode column to Rows.
+ * =========================================================
+ * SHORTCODE COLUMN
+ * =========================================================
  */
+
 function rd3_row_shortcode_column(
     $columns
 ) {
@@ -568,14 +610,20 @@ function rd3_row_shortcode_column_content(
 ) {
 
     if (
-        'rd3_shortcode' !== $column
+        'rd3_shortcode'
+        !==
+        $column
     ) {
+
         return;
     }
 
+
     $shortcode =
         '[rd3_row id="' .
-        $post_id .
+        absint(
+            $post_id
+        ) .
         '"]';
 
     ?>
@@ -609,8 +657,11 @@ add_action(
 
 
 /*
- * Copy Row shortcode.
+ * =========================================================
+ * COPY ROW SHORTCODE
+ * =========================================================
  */
+
 function rd3_row_copy_shortcode_script() {
     ?>
 
@@ -625,24 +676,29 @@ function rd3_row_copy_shortcode_script() {
                     'rd3-copy-row-shortcode'
                 )
             ) {
+
                 return;
             }
 
+
             var button =
                 event.target;
+
 
             var shortcode =
                 button.getAttribute(
                     'data-shortcode'
                 );
 
-            if ( ! shortcode ) {
+
+            if (
+                ! shortcode
+            ) {
+
                 return;
             }
 
-            /*
-             * Use the Clipboard API when available.
-             */
+
             if (
                 navigator.clipboard &&
                 navigator.clipboard.writeText
@@ -672,9 +728,7 @@ function rd3_row_copy_shortcode_script() {
                 return;
             }
 
-            /*
-             * Fallback for older browsers.
-             */
+
             rd3_row_copy_fallback(
                 button,
                 shortcode
@@ -683,9 +737,6 @@ function rd3_row_copy_shortcode_script() {
     );
 
 
-    /*
-     * Show successful copy.
-     */
     function rd3_row_copy_success(
         button
     ) {
@@ -693,8 +744,10 @@ function rd3_row_copy_shortcode_script() {
         var original =
             button.textContent;
 
+
         button.textContent =
             'Copied';
+
 
         setTimeout(
             function() {
@@ -708,9 +761,6 @@ function rd3_row_copy_shortcode_script() {
     }
 
 
-    /*
-     * Clipboard fallback.
-     */
     function rd3_row_copy_fallback(
         button,
         shortcode
@@ -721,31 +771,41 @@ function rd3_row_copy_shortcode_script() {
                 'textarea'
             );
 
+
         textarea.value =
             shortcode;
+
 
         textarea.style.position =
             'fixed';
 
+
         textarea.style.opacity =
             '0';
+
 
         document.body.appendChild(
             textarea
         );
 
+
         textarea.focus();
 
         textarea.select();
+
 
         var successful =
             document.execCommand(
                 'copy'
             );
 
+
         textarea.remove();
 
-        if ( successful ) {
+
+        if (
+            successful
+        ) {
 
             rd3_row_copy_success(
                 button
@@ -769,207 +829,29 @@ add_action(
     'rd3_row_copy_shortcode_script'
 );
 
-/*
- * Add Used On column to Rows.
- */
-function rd3_row_used_on_column(
-    $columns
-) {
-
-    $columns['rd3_used_on'] =
-        'Used On';
-
-    return $columns;
-}
-
-add_filter(
-    'manage_rd3_row_posts_columns',
-    'rd3_row_used_on_column'
-);
-
 
 /*
- * Display Row usage.
+ * =========================================================
+ * ROW CONTENT VALIDATION
+ * =========================================================
+ *
+ * Prevent an RD3 Row from containing another RD3 Block
+ * or RD3 Row shortcode.
  */
-function rd3_row_used_on_column_content(
-    $column,
-    $post_id
-) {
 
-    if (
-        'rd3_used_on' !== $column
-    ) {
-        return;
-    }
-
-
-    
-
-    $usage =
-        rd3_get_row_usage(
-            $post_id
-  
-            );
-update_post_meta(
-    $post_id,
-    '_rd3_usage_count',
-    count( $usage )
-);
-
-    if (
-        empty( $usage )
-    ) {
-
-        echo '<span style="color:#777;">';
-        echo 'Not currently used';
-        echo '</span>';
-
-        return;
-    }
-
-
-    foreach (
-        $usage as $item
-    ) {
-
-        if (
-            ! empty(
-                $item['edit_url']
-            )
-        ) {
-
-            echo '<a href="';
-
-            echo esc_url(
-                $item['edit_url']
-            );
-
-            echo '">';
-
-            echo esc_html(
-                $item['title']
-            );
-
-            echo '</a>';
-
-        } else {
-
-            echo esc_html(
-                $item['title']
-            );
-        }
-
-
-        echo '<br>';
-
-
-        echo '<small>';
-
-        echo esc_html(
-            $item['type_label']
-        );
-
-
-        if (
-            isset(
-                $item['usage_type']
-            )
-        ) {
-
-            echo ' — ';
-
-            echo esc_html(
-                $item['usage_type']
-            );
-        }
-
-
-        echo '</small>';
-
-        echo '<br><br>';
-    }
-}
-
-
-add_action(
-    'manage_rd3_row_posts_custom_column',
-    'rd3_row_used_on_column_content',
-    10,
-    2
-);
-
-
-/*
- * Make Used On column sortable.
- */
-function rd3_row_used_on_sortable( $columns ) {
-
-    $columns['rd3_used_on'] = 'rd3_used_on';
-
-    return $columns;
-}
-
-add_filter(
-    'manage_edit-rd3_row_sortable_columns',
-    'rd3_row_used_on_sortable'
-);
-
-
-/*
- * Sort Rows by usage count.
- */
-function rd3_row_used_on_orderby( $query ) {
-
-    if (
-        ! is_admin() ||
-        ! $query->is_main_query()
-    ) {
-        return;
-    }
-
-    if (
-        'rd3_row' !==
-        $query->get( 'post_type' )
-    ) {
-        return;
-    }
-
-    if (
-        'rd3_used_on' !==
-        $query->get( 'orderby' )
-    ) {
-        return;
-    }
-
-    $query->set(
-        'meta_key',
-        '_rd3_usage_count'
-    );
-
-    $query->set(
-        'orderby',
-        'meta_value_num'
-    );
-}
-
-add_action(
-    'pre_get_posts',
-    'rd3_row_used_on_orderby'
-);
-
-
-/*
- * Prevent an RD3 Row from being saved
- * if it contains an RD3 Block or RD3 Row shortcode.
- */
 function rd3_row_save_validation_script() {
 
     global $post;
 
+
     if (
-        ! $post ||
-        'rd3_row' !== $post->post_type
+        ! $post
+        ||
+        'rd3_row'
+        !==
+        $post->post_type
     ) {
+
         return;
     }
 
@@ -986,9 +868,14 @@ function rd3_row_save_validation_script() {
                     'post'
                 );
 
-            if ( ! form ) {
+
+            if (
+                ! form
+            ) {
+
                 return;
             }
+
 
             form.addEventListener(
                 'submit',
@@ -999,9 +886,14 @@ function rd3_row_save_validation_script() {
                             ? tinymce.get( 'content' )
                             : null;
 
-                    var content = '';
 
-                    if ( editor ) {
+                    var content =
+                        '';
+
+
+                    if (
+                        editor
+                    ) {
 
                         content =
                             editor.getContent();
@@ -1013,7 +905,10 @@ function rd3_row_save_validation_script() {
                                 'content'
                             );
 
-                        if ( textarea ) {
+
+                        if (
+                            textarea
+                        ) {
 
                             content =
                                 textarea.value;
@@ -1024,16 +919,21 @@ function rd3_row_save_validation_script() {
                     if (
                         content.indexOf(
                             '[rd3_block'
-                        ) !== -1
+                        )
+                        !==
+                        -1
                         ||
                         content.indexOf(
                             '[rd3_row'
-                        ) !== -1
+                        )
+                        !==
+                        -1
                     ) {
 
                         alert(
                             'Rows cannot contain [rd3_block] or [rd3_row] shortcodes.'
                         );
+
 
                         event.preventDefault();
 

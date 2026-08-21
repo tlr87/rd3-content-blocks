@@ -10,19 +10,18 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+
 /*
  * =========================================================
  * FRONT-END STYLES
  * =========================================================
  */
 
-
 function rd3_content_blocks_enqueue_styles() {
 
     wp_enqueue_style(
         'rd3-content-blocks-blocks',
-        plugin_dir_url( __FILE__ ) .
-        'assets/blocks.css',
+        plugin_dir_url( __FILE__ ) . 'assets/blocks.css',
         array(),
         '1.1.0'
     );
@@ -30,20 +29,24 @@ function rd3_content_blocks_enqueue_styles() {
 
     wp_enqueue_style(
         'rd3-content-blocks-rows',
-        plugin_dir_url( __FILE__ ) .
-        'assets/rows.css',
+        plugin_dir_url( __FILE__ ) . 'assets/rows.css',
         array(),
         '1.1.0'
     );
 
+
     wp_enqueue_style(
         'rd3-content-blocks-admin',
-        plugin_dir_url( __FILE__ ) .
-        'assets/admin.css',
+        plugin_dir_url( __FILE__ ) . 'assets/admin.css',
         array(),
         '1.1.0'
     );
 }
+
+add_action(
+    'wp_enqueue_scripts',
+    'rd3_content_blocks_enqueue_styles'
+);
 
 
 /*
@@ -53,14 +56,15 @@ function rd3_content_blocks_enqueue_styles() {
  */
 
 
-
-add_action(
-    'wp_enqueue_scripts',
-    'rd3_content_blocks_enqueue_styles'
-);
-
+/*
+ * Load administration.
+ *
+ * admin.php loads the individual admin components,
+ * including usage.php and sort.php in the correct order.
+ */
 /*
  * Load plugin files.
  */
 require_once plugin_dir_path( __FILE__ ) . 'admin/admin.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/shortcode.php';
+require_once plugin_dir_path( __FILE__ ) . 'admin/sort.php';
