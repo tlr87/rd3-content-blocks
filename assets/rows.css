@@ -137,7 +137,7 @@
 }
 
 .rd3-content-row.rd3-row-aligned .rd3-content-block-content > * {
-    display: grid;
+    display: block;
     grid-row: auto;
     grid-column: auto;
 }
@@ -173,7 +173,7 @@
 
 .rd3-content-row.rd3-row-aligned .rd3-content-block-edit {
     grid-row: auto;
-    margin-top: 24px;
+    margin-top: 60px;
 }
 
 
