@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: RD3 Content Blocks
- * Description: Lightweight reusable content blocks for the Classic Editor.
- * Version: 1.1.0
+ * Plugin Name: RD3 Content Blocks new
+ * Description: Lightweight reusable content blocks for the Classic Editor. Fixed by Ai
+ * Version: 1.2.0
  * Author: RD3 Tech
  */
 

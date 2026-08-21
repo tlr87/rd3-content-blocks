@@ -512,6 +512,7 @@ function rd3_row_shortcode( $atts ) {
 			array(
 				'inline',
 				'stacked',
+				'aligned',
 			),
 			true
 		)
@@ -967,6 +968,7 @@ function rd3_advanced_row_shortcode( $atts ) {
 			array(
 				'inline',
 				'stacked',
+				'aligned',
 			),
 			true
 		)

@@ -136,6 +136,7 @@ function rd3_row_settings_meta_box(
             array(
                 'inline',
                 'stacked',
+                'aligned',
             ),
             true
         )
@@ -244,6 +245,30 @@ function rd3_row_settings_meta_box(
 
         </label>
 
+        &nbsp;&nbsp;
+
+        <label>
+
+            <input
+                type="radio"
+                name="rd3_row_layout"
+                value="aligned"
+                <?php checked(
+                    $layout,
+                    'aligned'
+                ); ?>
+            >
+
+            Aligned Cards
+
+        </label>
+
+    </p>
+
+    <p class="description" style="margin-top:8px;">
+        <strong>Aligned Cards</strong> uses CSS Subgrid so that matching internal elements
+        (second heading, lists, etc.) line up across all cards. Best when the Content Blocks
+        share a similar structure.
     </p>
 
 
@@ -475,6 +500,7 @@ function rd3_row_save_settings(
             array(
                 'inline',
                 'stacked',
+                'aligned',
             ),
             true
         )

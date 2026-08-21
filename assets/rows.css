@@ -1,6 +1,9 @@
 /*
  * RD3 Content Blocks
  * Row Layout
+ *
+ * Uses modern CSS Grid for Inline rows and CSS Subgrid
+ * for Aligned Cards with consistent internal alignment.
  */
 
 
@@ -9,11 +12,8 @@
  * -------------------------------- */
 
 .rd3-content-row {
-
     width: 100%;
-
     box-sizing: border-box;
-
 }
 
 
@@ -24,7 +24,7 @@
 .rd3-content-row-item {
     padding: 0;
     box-sizing: border-box;
-
+    min-width: 0;
 }
 
 
@@ -33,29 +33,39 @@
  * -------------------------------- */
 
 .rd3-content-row.rd3-row-inline {
-
-    display: flex;
-
-    flex-wrap: nowrap;
-
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
-
     align-items: stretch;
-
 }
 
-
-.rd3-content-row.rd3-row-inline
-.rd3-content-row-item {
-
-    flex: 1 1 0;
-
-    min-width: 0;
-
+.rd3-content-row.rd3-row-inline .rd3-content-row-item {
     display: flex;
-
     flex-direction: column;
+    min-width: 0;
+}
 
+.rd3-content-row.rd3-row-inline .rd3-content-block {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.rd3-content-row.rd3-row-inline .rd3-content-block-content {
+    display: block;
+    flex: 1 1 auto;
+}
+
+.rd3-content-row.rd3-row-inline .rd3-content-block-content > * {
+    display: block;
+}
+
+.rd3-content-row.rd3-row-inline .rd3-content-block-link {
+    margin-top: auto;
+}
+
+.rd3-content-row.rd3-row-inline .rd3-content-block-edit {
+    margin-top: 20px;
 }
 
 
@@ -64,95 +74,149 @@
  * -------------------------------- */
 
 .rd3-content-row.rd3-row-stacked {
-
     display: flex;
-
     flex-direction: column;
-
     gap: 20px;
-
 }
 
-
-.rd3-content-row.rd3-row-stacked
-.rd3-content-row-item {
-
+.rd3-content-row.rd3-row-stacked .rd3-content-row-item {
     width: 100%;
-
 }
 
 
 /* --------------------------------
- * Content Block
+ * Aligned Cards
  * -------------------------------- */
 
-.rd3-content-row-item
-.rd3-content-block {
+.rd3-content-row.rd3-row-aligned {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
 
-    height: 100%;
+    /*
+     * Shared tracks:
+     * 1 = title
+     * 2 = intro
+     * 3 = second heading
+     * 4 = list
+     * 5 = explore link
+     */
 
-    display: flex;
+    grid-template-rows: auto auto auto auto auto;
+    gap: 20px;
+    align-items: stretch;
+}
 
-    flex-direction: column;
+.rd3-content-row.rd3-row-aligned .rd3-content-row-item {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 5;
+    min-width: 0;
+}
 
+.rd3-content-row.rd3-row-aligned .rd3-content-block {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 5;
+    height: auto;
+    margin: 0;
+    padding: 5%;
+    box-sizing: border-box;
+}
+
+.rd3-content-row.rd3-row-aligned .rd3-content-block-title {
+    grid-row: 1;
+    margin: 0 0 16px 0;
+}
+
+.rd3-content-row.rd3-row-aligned .rd3-content-block-content {
+    display: block;
+    grid-template-rows: subgrid;
+    grid-row: 2 / span 3;
+    margin: 20px 0 0 0;
+    padding: 0;
+}
+
+.rd3-content-row.rd3-row-aligned .rd3-content-block-content > * {
+    display: grid;
+    grid-row: auto;
+    grid-column: auto;
+}
+
+
+/* First heading + paragraph stay in normal flow */
+
+.rd3-content-row.rd3-row-aligned .rd3-content-block-content h4:first-of-type,
+.rd3-content-row.rd3-row-aligned .rd3-content-block-content p:first-of-type {
+    grid-row: auto;
+    grid-column: 1;
+}
+
+
+/* Second heading and list stay aligned */
+
+.rd3-content-row.rd3-row-aligned .rd3-content-block-content h4:nth-of-type(2) {
+    grid-row: 2;
+    grid-column: 1;
+}
+
+.rd3-content-row.rd3-row-aligned .rd3-content-block-content ul {
+    grid-row: 3;
+    grid-column: 1;
+    margin-top: 0;
+}
+
+.rd3-content-row.rd3-row-aligned .rd3-content-block-link {
+    grid-row: 5;
+    margin-top: 0;
+    padding: 20px 0 0 0;
+}
+
+.rd3-content-row.rd3-row-aligned .rd3-content-block-edit {
+    grid-row: auto;
+    margin-top: 24px;
 }
 
 
 /* --------------------------------
- * Content Block Content
- * -------------------------------- */
-
-.rd3-content-row-item
-.rd3-content-block-content {
-
-    flex: 1 1 auto;
-
-}
-
-
-/* --------------------------------
- * Content Block Link
- * -------------------------------- */
-
-.rd3-content-row-item
-.rd3-content-block-link {
-
-    margin-top: auto;
-
-}
-
-
-/* --------------------------------
- * Edit Link
- * -------------------------------- */
-
-.rd3-content-row-item
-.rd3-content-block-edit {
-
-    margin-top: 20px;
-
-}
-
-
-/* --------------------------------
- * Mobile
+ * Tablet
  * -------------------------------- */
 
 @media (max-width: 1000px) {
 
-    .rd3-content-row.rd3-row-inline {
-
-        flex-direction: column;
-
+    .rd3-content-row.rd3-row-inline,
+    .rd3-content-row.rd3-row-aligned {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-
-    .rd3-content-row.rd3-row-inline
-    .rd3-content-row-item {
-
-        width: 100%;
-
-    }
-
 }
 
+@media (max-width: 800px) {
+    .rd3-content-row.rd3-row-inline,
+    .rd3-content-row.rd3-row-aligned {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+/* --------------------------------
+ * Mobile
+ * -------------------------------- */
+
+@media (max-width: 600px) {
+
+    .rd3-content-row.rd3-row-inline,
+    .rd3-content-row.rd3-row-aligned {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .rd3-content-row.rd3-row-inline .rd3-content-row-item,
+    .rd3-content-row.rd3-row-aligned .rd3-content-row-item {
+        display: flex;
+        width: 100%;
+    }
+
+    .rd3-content-row.rd3-row-aligned .rd3-content-block,
+    .rd3-content-row.rd3-row-aligned .rd3-content-block-content,
+    .rd3-content-row.rd3-row-aligned .rd3-content-block-content > * {
+        display: block;
+    }
+}
