@@ -163,6 +163,7 @@ function rd3_advanced_row_settings_meta_box(
             array(
                 'inline',
                 'stacked',
+                'aligned',
             ),
             true
         )
@@ -346,7 +347,9 @@ function rd3_advanced_row_settings_meta_box(
         </label>
 
 
-        <label>
+        <label
+            style="margin-right:20px;"
+        >
 
             <input
                 type="radio"
@@ -360,6 +363,25 @@ function rd3_advanced_row_settings_meta_box(
 
             <strong>
                 Stacked
+            </strong>
+
+        </label>
+
+
+        <label>
+
+            <input
+                type="radio"
+                name="rd3_advanced_row_layout"
+                value="aligned"
+                <?php checked(
+                    $layout,
+                    'aligned'
+                ); ?>
+            >
+
+            <strong>
+                Aligned Cards
             </strong>
 
         </label>
@@ -717,6 +739,7 @@ function rd3_advanced_row_save_settings(
             array(
                 'inline',
                 'stacked',
+                'aligned',
             ),
             true
         )
