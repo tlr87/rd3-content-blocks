@@ -280,7 +280,7 @@ function rd3_content_block_shortcode( $atts ) {
 	) {
 
 		$output .=
-			'<h2 class="rd3-content-block-title">';
+			'<h3 class="rd3-content-block-title">';
 
 		$output .=
 			esc_html(
@@ -288,7 +288,7 @@ function rd3_content_block_shortcode( $atts ) {
 			);
 
 		$output .=
-			'</h2>';
+			'</h3>';
 	}
 
 
