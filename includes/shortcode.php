@@ -263,8 +263,20 @@ function rd3_content_block_shortcode( $atts ) {
 	 * ========================================================
 	 */
 
-	$output =
-		'<div class="rd3-content-block">';
+	$appearance_style =
+	rd3_content_blocks_get_appearance_style(
+		$block_id,
+		'block'
+	);
+
+$output =
+	'<div class="rd3-content-block block-' .
+	esc_attr(
+		$block_id
+	) .
+	'"' .
+	$appearance_style .
+	'>';
 
 
 	/*
@@ -608,17 +620,29 @@ function rd3_row_shortcode( $atts ) {
 	}
 
 
-	/*
-	 * Create actual Row.
-	 */
+/*
+ * Create actual Row.
+ */
 
-	$output .=
-		'<div class="rd3-content-row rd3-row-' .
-		esc_attr(
-			$layout
-		) .
-		'">';
+$appearance_style =
+	rd3_content_blocks_get_appearance_style(
+		$row_id,
+		'row'
+	);
 
+
+$output .=
+	'<div class="rd3-content-row rd3-row-' .
+	esc_attr(
+		$layout
+	) .
+	' row-' .
+	esc_attr(
+		$row_id
+	) .
+	'"' .
+	$appearance_style .
+	'>';
 
 	/*
 	 * Render Content Blocks.

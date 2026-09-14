@@ -25,7 +25,7 @@ require_once plugin_dir_path( __FILE__ ) . 'editor.php';
 require_once plugin_dir_path( __FILE__ ) . 'help.php';
 require_once plugin_dir_path( __FILE__ ) . 'usage.php';
 require_once plugin_dir_path( __FILE__ ) . 'sort.php';
-
+require_once plugin_dir_path( __FILE__ ) . 'appearance.php';
 
 /*
  * =========================================================

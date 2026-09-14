@@ -3,13 +3,59 @@
    ========================================================= */
 
 .rd3-content-block {
+
     width: 100%;
+
     height: 100%;
+
     margin: 0;
+
     padding: 5%;
+
     box-sizing: border-box;
+
     display: flex;
+
     flex-direction: column;
+
+    /* Appearance settings
+     *
+     * Priority:
+     * 1. Row Content Block Override
+     * 2. Content Block Appearance Setting
+     * 3. CSS default
+     */
+
+    background-color: var(
+        --rd3-row-block-background,
+        var(--rd3-block-background, transparent)
+    );
+
+    color: var(
+        --rd3-row-block-text,
+        var(--rd3-block-text, inherit)
+    );
+
+    border-style: var(
+        --rd3-row-block-border-style,
+        var(--rd3-block-border-style, none)
+    );
+
+    border-width: var(
+        --rd3-row-block-border-width,
+        var(--rd3-block-border-width, 0)
+    );
+
+    border-color: var(
+        --rd3-row-block-border-color,
+        var(--rd3-block-border-color, transparent)
+    );
+
+    border-radius: var(
+        --rd3-row-block-radius,
+        var(--rd3-block-radius, 0)
+    );
+
 }
 
 

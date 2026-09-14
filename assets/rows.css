@@ -18,15 +18,27 @@
 
 
 /* --------------------------------
- * Row Items
+ * Base Row
  * -------------------------------- */
 
-.rd3-content-row-item {
-    padding: 0;
+.rd3-content-row {
+    width: 100%;
     box-sizing: border-box;
-    min-width: 0;
-}
 
+    /* Appearance settings */
+
+    background-color: var(--rd3-row-background, transparent);
+
+    color: var(--rd3-row-text, inherit);
+
+    border-style: var(--rd3-row-border-style, none);
+
+    border-width: var(--rd3-row-border-width, 0);
+
+    border-color: var(--rd3-row-border-color, transparent);
+
+    border-radius: var(--rd3-row-radius, 0);
+}
 
 /* --------------------------------
  * Inline
