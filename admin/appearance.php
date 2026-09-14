@@ -3,1844 +3,1680 @@
 /**
  * RD3 Content Blocks
  *
- * Appearance Settings
+ * Appearance Controls
  *
- * Handles visual appearance settings for:
- * - Content Blocks
- * - Rows
+ * Handles:
+ * - Content Block appearance
+ * - Row appearance
+ * - Row Content Block overrides
+ * - Global appearance default inheritance
  *
- * Row settings also allow a Row to override the appearance
- * of all Content Blocks contained within that Row.
+ * Inheritance:
  *
- * Settings:
- * - Background colour
- * - Text colour
- * - Border style
- * - Border width
- * - Border colour
- * - Border radius
+ * Content Block:
+ *   Global Default
+ *       ↓
+ *   Content Block Setting
  *
- * Appearance settings are stored as post meta and rendered
- * by the shortcode system as CSS custom properties.
+ * Row:
+ *   Global Default
+ *       ↓
+ *   Row Setting
+ *
+ * Content Blocks inside a Row:
+ *   Global Default
+ *       ↓
+ *   Content Block Setting
+ *       ↓
+ *   Row Content Block Override
+ *
+ * Clearing a setting removes its post meta so the next
+ * available default is used.
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
 
+/* =========================================================
+ * BORDER STYLES
+ * ========================================================= */
 
-/*
-|--------------------------------------------------------------------------
-| Appearance Configuration
-|--------------------------------------------------------------------------
-*/
-
-/**
- * Get allowed border styles.
- *
- * @return array
- */
 function rd3_content_blocks_appearance_border_styles() {
 
-	return array(
-		'none'   => 'None',
-		'solid'  => 'Solid',
-		'dashed' => 'Dashed',
-		'dotted' => 'Dotted',
-		'double' => 'Double',
-	);
+    return array(
+        'none'   => 'None',
+        'solid'  => 'Solid',
+        'dashed' => 'Dashed',
+        'dotted' => 'Dotted',
+        'double' => 'Double',
+    );
 }
 
 
-/**
- * Get appearance meta keys for a content block or row.
- *
- * @param string $type block|row
- * @return array
- */
-function rd3_content_blocks_appearance_meta_keys( $type = 'block' ) {
+/* =========================================================
+ * META KEYS
+ * ========================================================= */
 
-	if ( 'row' === $type ) {
+function rd3_content_blocks_appearance_meta_keys( $type ) {
 
-		return array(
-			'background'       => '_rd3_row_background',
-			'text_color'       => '_rd3_row_text_color',
-			'border_style'     => '_rd3_row_border_style',
-			'border_width'     => '_rd3_row_border_width',
-			'border_color'     => '_rd3_row_border_color',
-			'radius'           => '_rd3_row_border_radius',
+    if ( 'row' === $type ) {
 
-			/*
-			 * Content Block override settings.
-			 */
-			'block_background'   => '_rd3_row_block_background',
-			'block_text_color'   => '_rd3_row_block_text_color',
-			'block_border_style' => '_rd3_row_block_border_style',
-			'block_border_width' => '_rd3_row_block_border_width',
-			'block_border_color' => '_rd3_row_block_border_color',
-			'block_radius'       => '_rd3_row_block_border_radius',
-		);
-	}
+        return array(
+            'background'   => '_rd3_row_background',
+            'text_color'   => '_rd3_row_text_color',
+            'border_style' => '_rd3_row_border_style',
+            'border_width' => '_rd3_row_border_width',
+            'border_color' => '_rd3_row_border_color',
+            'radius'       => '_rd3_row_border_radius',
 
-	return array(
-		'background'   => '_rd3_content_block_background',
-		'text_color'   => '_rd3_content_block_text_color',
-		'border_style' => '_rd3_content_block_border_style',
-		'border_width' => '_rd3_content_block_border_width',
-		'border_color' => '_rd3_content_block_border_color',
-		'radius'       => '_rd3_content_block_border_radius',
-	);
+            'block_background'   => '_rd3_row_block_background',
+            'block_text_color'   => '_rd3_row_block_text_color',
+            'block_border_style' => '_rd3_row_block_border_style',
+            'block_border_width' => '_rd3_row_block_border_width',
+            'block_border_color' => '_rd3_row_block_border_color',
+            'block_radius'       => '_rd3_row_block_border_radius',
+        );
+    }
+
+    return array(
+        'background'   => '_rd3_content_block_background',
+        'text_color'   => '_rd3_content_block_text_color',
+        'border_style' => '_rd3_content_block_border_style',
+        'border_width' => '_rd3_content_block_border_width',
+        'border_color' => '_rd3_content_block_border_color',
+        'radius'       => '_rd3_content_block_border_radius',
+    );
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| Meta Boxes
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+ * GLOBAL DEFAULT
+ * ========================================================= */
 
-/**
- * Add Appearance meta box to Content Blocks.
- */
-function rd3_content_blocks_add_block_appearance_meta_box() {
-
-	add_meta_box(
-		'rd3_content_block_appearance',
-		'Appearance',
-		'rd3_content_block_appearance_meta_box',
-		'rd3_content_block',
-		'normal',
-		'default'
-	);
-}
-
-add_action(
-	'add_meta_boxes_rd3_content_block',
-	'rd3_content_blocks_add_block_appearance_meta_box'
-);
-
-
-/**
- * Add Appearance meta box to Rows.
- */
-function rd3_content_blocks_add_row_appearance_meta_box() {
-
-	add_meta_box(
-		'rd3_row_appearance',
-		'Appearance',
-		'rd3_row_appearance_meta_box',
-		'rd3_row',
-		'normal',
-		'default'
-	);
-}
-
-add_action(
-	'add_meta_boxes_rd3_row',
-	'rd3_content_blocks_add_row_appearance_meta_box'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| Meta Box Output
-|--------------------------------------------------------------------------
-*/
-
-/**
- * Render Content Block Appearance meta box.
- *
- * @param WP_Post $post
- */
-function rd3_content_block_appearance_meta_box( $post ) {
-
-	wp_nonce_field(
-		'rd3_content_blocks_save_appearance',
-		'rd3_content_blocks_appearance_nonce'
-	);
-
-	rd3_content_blocks_render_appearance_fields(
-		$post->ID,
-		'block'
-	);
-}
-
-
-/**
- * Render Row Appearance meta box.
- *
- * @param WP_Post $post
- */
-function rd3_row_appearance_meta_box( $post ) {
-
-	wp_nonce_field(
-		'rd3_content_blocks_save_appearance',
-		'rd3_content_blocks_appearance_nonce'
-	);
-
-	rd3_content_blocks_render_appearance_fields(
-		$post->ID,
-		'row'
-	);
-}
-
-
-/**
- * Render shared appearance fields.
- *
- * @param int    $post_id
- * @param string $type
- */
-function rd3_content_blocks_render_appearance_fields(
-	$post_id,
-	$type = 'block'
+function rd3_content_blocks_get_global_appearance_default(
+    $type,
+    $setting
 ) {
 
-	$keys = rd3_content_blocks_appearance_meta_keys( $type );
-
-	$background = get_post_meta(
-		$post_id,
-		$keys['background'],
-		true
-	);
-
-	$text_color = get_post_meta(
-		$post_id,
-		$keys['text_color'],
-		true
-	);
-
-	$border_style = get_post_meta(
-		$post_id,
-		$keys['border_style'],
-		true
-	);
-
-	$border_width = get_post_meta(
-		$post_id,
-		$keys['border_width'],
-		true
-	);
-
-	$border_color = get_post_meta(
-		$post_id,
-		$keys['border_color'],
-		true
-	);
-
-	$radius = get_post_meta(
-		$post_id,
-		$keys['radius'],
-		true
-	);
-
-	$border_styles =
-		rd3_content_blocks_appearance_border_styles();
-
-	?>
-
-	<div class="rd3-appearance-settings">
-
-		<p class="description">
-			Use these settings to customise the appearance of this
-			<?php echo ( 'row' === $type ) ? 'row' : 'content block'; ?>.
-			Leave colour fields empty to keep the existing appearance.
-		</p>
-
-		<table class="form-table rd3-appearance-table">
-
-			<tr>
-				<th scope="row">
-					<label
-						for="rd3-appearance-background-<?php echo esc_attr( $post_id ); ?>"
-					>
-						Background colour
-					</label>
-				</th>
-
-				<td>
-
-					<div class="rd3-appearance-color-row">
-
-						<input
-							type="text"
-							id="rd3-appearance-background-<?php echo esc_attr( $post_id ); ?>"
-							name="rd3_appearance_background"
-							value="<?php echo esc_attr( $background ); ?>"
-							class="rd3-appearance-color"
-							data-default-color=""
-							placeholder="#FFFFFF"
-						/>
-
-						<button
-							type="button"
-							class="button rd3-appearance-clear"
-							data-target="rd3-appearance-background-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Clear
-						</button>
-
-					</div>
-
-					<p class="description">
-						Sets the background colour of the
-						<?php echo ( 'row' === $type ) ? 'row' : 'content block'; ?>.
-					</p>
-
-				</td>
-			</tr>
-
-
-			<tr>
-				<th scope="row">
-					<label
-						for="rd3-appearance-text-<?php echo esc_attr( $post_id ); ?>"
-					>
-						Text colour
-					</label>
-				</th>
-
-				<td>
-
-					<div class="rd3-appearance-color-row">
-
-						<input
-							type="text"
-							id="rd3-appearance-text-<?php echo esc_attr( $post_id ); ?>"
-							name="rd3_appearance_text_color"
-							value="<?php echo esc_attr( $text_color ); ?>"
-							class="rd3-appearance-color"
-							data-default-color=""
-							placeholder="#333333"
-						/>
-
-						<button
-							type="button"
-							class="button rd3-appearance-clear"
-							data-target="rd3-appearance-text-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Clear
-						</button>
-
-					</div>
-
-					<p class="description">
-						Sets the text colour inside the
-						<?php echo ( 'row' === $type ) ? 'row' : 'content block'; ?>.
-					</p>
-
-				</td>
-			</tr>
-
-
-			<tr>
-				<th scope="row">
-					<label
-						for="rd3-appearance-border-style-<?php echo esc_attr( $post_id ); ?>"
-					>
-						Border
-					</label>
-				</th>
-
-				<td>
-
-					<select
-						id="rd3-appearance-border-style-<?php echo esc_attr( $post_id ); ?>"
-						name="rd3_appearance_border_style"
-					>
-
-						<?php foreach ( $border_styles as $value => $label ) : ?>
-
-							<option
-								value="<?php echo esc_attr( $value ); ?>"
-								<?php selected(
-									$border_style ? $border_style : 'none',
-									$value
-								); ?>
-							>
-								<?php echo esc_html( $label ); ?>
-							</option>
-
-						<?php endforeach; ?>
-
-					</select>
-
-					<p class="description">
-						Choose the border style. Select None for no border.
-					</p>
-
-				</td>
-			</tr>
-
-
-			<tr>
-				<th scope="row">
-					<label
-						for="rd3-appearance-border-width-<?php echo esc_attr( $post_id ); ?>"
-					>
-						Border thickness
-					</label>
-				</th>
-
-				<td>
-
-					<div class="rd3-appearance-number">
-
-						<input
-							type="number"
-							id="rd3-appearance-border-width-<?php echo esc_attr( $post_id ); ?>"
-							name="rd3_appearance_border_width"
-							value="<?php echo esc_attr( $border_width ); ?>"
-							min="0"
-							max="50"
-							step="1"
-						/>
-
-						<span>px</span>
-
-					</div>
-
-					<p class="description">
-						0px means no visible border.
-					</p>
-
-				</td>
-			</tr>
-
-
-			<tr>
-				<th scope="row">
-					<label
-						for="rd3-appearance-border-color-<?php echo esc_attr( $post_id ); ?>"
-					>
-						Border colour
-					</label>
-				</th>
-
-				<td>
-
-					<div class="rd3-appearance-color-row">
-
-						<input
-							type="text"
-							id="rd3-appearance-border-color-<?php echo esc_attr( $post_id ); ?>"
-							name="rd3_appearance_border_color"
-							value="<?php echo esc_attr( $border_color ); ?>"
-							class="rd3-appearance-color"
-							data-default-color=""
-							placeholder="#CCCCCC"
-						/>
-
-						<button
-							type="button"
-							class="button rd3-appearance-clear"
-							data-target="rd3-appearance-border-color-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Clear
-						</button>
-
-					</div>
-
-				</td>
-			</tr>
-
-
-			<tr>
-				<th scope="row">
-					<label
-						for="rd3-appearance-radius-<?php echo esc_attr( $post_id ); ?>"
-					>
-						Border radius
-					</label>
-				</th>
-
-				<td>
-
-					<div class="rd3-appearance-number">
-
-						<input
-							type="number"
-							id="rd3-appearance-radius-<?php echo esc_attr( $post_id ); ?>"
-							name="rd3_appearance_border_radius"
-							value="<?php echo esc_attr( $radius ); ?>"
-							min="0"
-							max="100"
-							step="1"
-						/>
-
-						<span>px</span>
-
-					</div>
-
-					<p class="description">
-						0px means square corners.
-					</p>
-
-				</td>
-			</tr>
-
-		</table>
-
-
-		<?php if ( 'row' === $type ) : ?>
-
-			<?php
-			/*
-			 * Row Content Block Overrides
-			 */
-
-			$block_background = get_post_meta(
-				$post_id,
-				$keys['block_background'],
-				true
-			);
-
-			$block_text_color = get_post_meta(
-				$post_id,
-				$keys['block_text_color'],
-				true
-			);
-
-			$block_border_style = get_post_meta(
-				$post_id,
-				$keys['block_border_style'],
-				true
-			);
-
-			$block_border_width = get_post_meta(
-				$post_id,
-				$keys['block_border_width'],
-				true
-			);
-
-			$block_border_color = get_post_meta(
-				$post_id,
-				$keys['block_border_color'],
-				true
-			);
-
-			$block_radius = get_post_meta(
-				$post_id,
-				$keys['block_radius'],
-				true
-			);
-			?>
-
-			<hr />
-
-			<h3>
-				Content Block Overrides
-			</h3>
-
-			<p class="description">
-				These settings override the matching appearance settings
-				of every Content Block inside this Row.
-				Leave a setting empty to use each Content Block's own setting.
-			</p>
-
-			<table class="form-table rd3-appearance-table">
-
-				<tr>
-					<th scope="row">
-						<label
-							for="rd3-row-block-background-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Background colour
-						</label>
-					</th>
-
-					<td>
-
-						<div class="rd3-appearance-color-row">
-
-							<input
-								type="text"
-								id="rd3-row-block-background-<?php echo esc_attr( $post_id ); ?>"
-								name="rd3_row_block_background"
-								value="<?php echo esc_attr( $block_background ); ?>"
-								class="rd3-appearance-color"
-								data-default-color=""
-								placeholder="#FFFFFF"
-							/>
-
-							<button
-								type="button"
-								class="button rd3-appearance-clear"
-								data-target="rd3-row-block-background-<?php echo esc_attr( $post_id ); ?>"
-							>
-								Clear
-							</button>
-
-						</div>
-
-						<p class="description">
-							Overrides the background colour of all Content Blocks in this Row.
-						</p>
-
-					</td>
-				</tr>
-
-
-				<tr>
-					<th scope="row">
-						<label
-							for="rd3-row-block-text-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Text colour
-						</label>
-					</th>
-
-					<td>
-
-						<div class="rd3-appearance-color-row">
-
-							<input
-								type="text"
-								id="rd3-row-block-text-<?php echo esc_attr( $post_id ); ?>"
-								name="rd3_row_block_text_color"
-								value="<?php echo esc_attr( $block_text_color ); ?>"
-								class="rd3-appearance-color"
-								data-default-color=""
-								placeholder="#333333"
-							/>
-
-							<button
-								type="button"
-								class="button rd3-appearance-clear"
-								data-target="rd3-row-block-text-<?php echo esc_attr( $post_id ); ?>"
-							>
-								Clear
-							</button>
-
-						</div>
-
-						<p class="description">
-							Overrides the text colour of all Content Blocks in this Row.
-						</p>
-
-					</td>
-				</tr>
-
-
-				<tr>
-					<th scope="row">
-						<label
-							for="rd3-row-block-border-style-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Border
-						</label>
-					</th>
-
-					<td>
-
-						<select
-							id="rd3-row-block-border-style-<?php echo esc_attr( $post_id ); ?>"
-							name="rd3_row_block_border_style"
-						>
-
-							<option value="">
-								Use Content Block setting
-							</option>
-
-							<?php foreach ( $border_styles as $value => $label ) : ?>
-
-								<option
-									value="<?php echo esc_attr( $value ); ?>"
-									<?php selected(
-										$block_border_style,
-										$value
-									); ?>
-								>
-									<?php echo esc_html( $label ); ?>
-								</option>
-
-							<?php endforeach; ?>
-
-						</select>
-
-						<p class="description">
-							Overrides the border style of all Content Blocks in this Row.
-						</p>
-
-					</td>
-				</tr>
-
-
-				<tr>
-					<th scope="row">
-						<label
-							for="rd3-row-block-border-width-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Border thickness
-						</label>
-					</th>
-
-					<td>
-
-						<div class="rd3-appearance-number">
-
-							<input
-								type="number"
-								id="rd3-row-block-border-width-<?php echo esc_attr( $post_id ); ?>"
-								name="rd3_row_block_border_width"
-								value="<?php echo esc_attr( $block_border_width ); ?>"
-								min="0"
-								max="50"
-								step="1"
-								placeholder="Use Content Block setting"
-							/>
-
-							<span>px</span>
-
-						</div>
-
-						<p class="description">
-							Leave empty to use each Content Block's border thickness.
-						</p>
-
-					</td>
-				</tr>
-
-
-				<tr>
-					<th scope="row">
-						<label
-							for="rd3-row-block-border-color-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Border colour
-						</label>
-					</th>
-
-					<td>
-
-						<div class="rd3-appearance-color-row">
-
-							<input
-								type="text"
-								id="rd3-row-block-border-color-<?php echo esc_attr( $post_id ); ?>"
-								name="rd3_row_block_border_color"
-								value="<?php echo esc_attr( $block_border_color ); ?>"
-								class="rd3-appearance-color"
-								data-default-color=""
-								placeholder="#CCCCCC"
-							/>
-
-							<button
-								type="button"
-								class="button rd3-appearance-clear"
-								data-target="rd3-row-block-border-color-<?php echo esc_attr( $post_id ); ?>"
-							>
-								Clear
-							</button>
-
-						</div>
-
-						<p class="description">
-							Overrides the border colour of all Content Blocks in this Row.
-						</p>
-
-					</td>
-				</tr>
-
-
-				<tr>
-					<th scope="row">
-						<label
-							for="rd3-row-block-radius-<?php echo esc_attr( $post_id ); ?>"
-						>
-							Border radius
-						</label>
-					</th>
-
-					<td>
-
-						<div class="rd3-appearance-number">
-
-							<input
-								type="number"
-								id="rd3-row-block-radius-<?php echo esc_attr( $post_id ); ?>"
-								name="rd3_row_block_border_radius"
-								value="<?php echo esc_attr( $block_radius ); ?>"
-								min="0"
-								max="100"
-								step="1"
-								placeholder="Use Content Block setting"
-							/>
-
-							<span>px</span>
-
-						</div>
-
-						<p class="description">
-							Leave empty to use each Content Block's border radius.
-						</p>
-
-					</td>
-				</tr>
-
-			</table>
-
-		<?php endif; ?>
-
-	</div>
-
-	<?php
+    if (
+        function_exists(
+            'rd3_content_blocks_get_appearance_default'
+        )
+    ) {
+
+        return rd3_content_blocks_get_appearance_default(
+            $type,
+            $setting
+        );
+    }
+
+    return '';
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| Saving
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+ * GET META VALUE
+ * ========================================================= */
 
-/**
- * Save appearance settings.
- *
- * Handles both Content Blocks and Rows.
- *
- * @param int     $post_id
- * @param WP_Post $post
- * @param bool    $update
- */
-function rd3_content_blocks_save_appearance(
-	$post_id,
-	$post,
-	$update
+function rd3_content_blocks_get_appearance_meta_value(
+    $post_id,
+    $meta_key
 ) {
 
-	/*
-	 * Only our post types.
-	 */
-	if (
-		! $post ||
-		! in_array(
-			$post->post_type,
-			array(
-				'rd3_content_block',
-				'rd3_row',
-			),
-			true
-		)
-	) {
-		return;
-	}
-
-
-	/*
-	 * Ignore autosaves.
-	 */
-	if ( wp_is_post_autosave( $post_id ) ) {
-		return;
-	}
-
-
-	/*
-	 * Ignore revisions.
-	 */
-	if ( wp_is_post_revision( $post_id ) ) {
-		return;
-	}
-
-
-	/*
-	 * Permission check.
-	 */
-	if ( ! current_user_can( 'edit_post', $post_id ) ) {
-		return;
-	}
-
-
-	/*
-	 * Nonce check.
-	 */
-	if (
-		! isset(
-			$_POST['rd3_content_blocks_appearance_nonce']
-		)
-	) {
-		return;
-	}
-
-
-	if (
-		! wp_verify_nonce(
-			sanitize_text_field(
-				wp_unslash(
-					$_POST['rd3_content_blocks_appearance_nonce']
-				)
-			),
-			'rd3_content_blocks_save_appearance'
-		)
-	) {
-		return;
-	}
-
-
-	/*
-	 * Determine which appearance settings to use.
-	 */
-	$type = (
-		'rd3_row' === $post->post_type
-	)
-		? 'row'
-		: 'block';
-
-
-	$keys = rd3_content_blocks_appearance_meta_keys(
-		$type
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Background
-	|--------------------------------------------------------------------------
-	*/
-
-	$background = '';
-
-	if ( isset( $_POST['rd3_appearance_background'] ) ) {
-
-		$background = sanitize_hex_color(
-			wp_unslash(
-				$_POST['rd3_appearance_background']
-			)
-		);
-	}
-
-	rd3_content_blocks_save_appearance_value(
-		$post_id,
-		$keys['background'],
-		$background
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Text Colour
-	|--------------------------------------------------------------------------
-	*/
-
-	$text_color = '';
-
-	if ( isset( $_POST['rd3_appearance_text_color'] ) ) {
-
-		$text_color = sanitize_hex_color(
-			wp_unslash(
-				$_POST['rd3_appearance_text_color']
-			)
-		);
-	}
-
-	rd3_content_blocks_save_appearance_value(
-		$post_id,
-		$keys['text_color'],
-		$text_color
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Border Style
-	|--------------------------------------------------------------------------
-	*/
-
-	$border_style = 'none';
-
-	if ( isset( $_POST['rd3_appearance_border_style'] ) ) {
-
-		$border_style = sanitize_key(
-			wp_unslash(
-				$_POST['rd3_appearance_border_style']
-			)
-		);
-	}
-
-	$allowed_styles =
-		rd3_content_blocks_appearance_border_styles();
-
-	if (
-		! array_key_exists(
-			$border_style,
-			$allowed_styles
-		)
-	) {
-		$border_style = 'none';
-	}
-
-	update_post_meta(
-		$post_id,
-		$keys['border_style'],
-		$border_style
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Border Width
-	|--------------------------------------------------------------------------
-	*/
-
-	$border_width = 0;
-
-	if ( isset( $_POST['rd3_appearance_border_width'] ) ) {
-
-		$border_width = absint(
-			wp_unslash(
-				$_POST['rd3_appearance_border_width']
-			)
-		);
-	}
-
-	$border_width = min(
-		$border_width,
-		50
-	);
-
-	update_post_meta(
-		$post_id,
-		$keys['border_width'],
-		$border_width
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Border Colour
-	|--------------------------------------------------------------------------
-	*/
-
-	$border_color = '';
-
-	if ( isset( $_POST['rd3_appearance_border_color'] ) ) {
-
-		$border_color = sanitize_hex_color(
-			wp_unslash(
-				$_POST['rd3_appearance_border_color']
-			)
-		);
-	}
-
-	rd3_content_blocks_save_appearance_value(
-		$post_id,
-		$keys['border_color'],
-		$border_color
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Border Radius
-	|--------------------------------------------------------------------------
-	*/
-
-	$radius = 0;
-
-	if ( isset( $_POST['rd3_appearance_border_radius'] ) ) {
-
-		$radius = absint(
-			wp_unslash(
-				$_POST['rd3_appearance_border_radius']
-			)
-		);
-	}
-
-	$radius = min(
-		$radius,
-		100
-	);
-
-	update_post_meta(
-		$post_id,
-		$keys['radius'],
-		$radius
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Row Content Block Overrides
-	|--------------------------------------------------------------------------
-	*/
-
-	if ( 'row' === $type ) {
-
-		/*
-		 * Background.
-		 */
-		$block_background = '';
-
-		if ( isset( $_POST['rd3_row_block_background'] ) ) {
-
-			$block_background = sanitize_hex_color(
-				wp_unslash(
-					$_POST['rd3_row_block_background']
-				)
-			);
-		}
-
-		rd3_content_blocks_save_appearance_value(
-			$post_id,
-			$keys['block_background'],
-			$block_background
-		);
-
-
-		/*
-		 * Text colour.
-		 */
-		$block_text_color = '';
-
-		if ( isset( $_POST['rd3_row_block_text_color'] ) ) {
-
-			$block_text_color = sanitize_hex_color(
-				wp_unslash(
-					$_POST['rd3_row_block_text_color']
-				)
-			);
-		}
-
-		rd3_content_blocks_save_appearance_value(
-			$post_id,
-			$keys['block_text_color'],
-			$block_text_color
-		);
-
-
-		/*
-		 * Border style.
-		 *
-		 * Empty means "use Content Block setting".
-		 */
-		$block_border_style = '';
-
-		if ( isset( $_POST['rd3_row_block_border_style'] ) ) {
-
-			$block_border_style = sanitize_key(
-				wp_unslash(
-					$_POST['rd3_row_block_border_style']
-				)
-			);
-		}
-
-		if (
-			'' !== $block_border_style &&
-			! array_key_exists(
-				$block_border_style,
-				$allowed_styles
-			)
-		) {
-			$block_border_style = '';
-		}
-
-		rd3_content_blocks_save_appearance_value(
-			$post_id,
-			$keys['block_border_style'],
-			$block_border_style
-		);
-
-
-		/*
-		 * Border width.
-		 *
-		 * Empty means "use Content Block setting".
-		 */
-		$block_border_width = '';
-
-		if (
-			isset(
-				$_POST['rd3_row_block_border_width']
-			)
-		) {
-
-			$raw_width =
-				trim(
-					wp_unslash(
-						$_POST['rd3_row_block_border_width']
-					)
-				);
-
-			if ( '' !== $raw_width ) {
-
-				$block_border_width = absint(
-					$raw_width
-				);
-
-				$block_border_width = min(
-					$block_border_width,
-					50
-				);
-
-			}
-		}
-
-		rd3_content_blocks_save_appearance_value(
-			$post_id,
-			$keys['block_border_width'],
-			$block_border_width
-		);
-
-
-		/*
-		 * Border colour.
-		 */
-		$block_border_color = '';
-
-		if (
-			isset(
-				$_POST['rd3_row_block_border_color']
-			)
-		) {
-
-			$block_border_color = sanitize_hex_color(
-				wp_unslash(
-					$_POST['rd3_row_block_border_color']
-				)
-			);
-		}
-
-		rd3_content_blocks_save_appearance_value(
-			$post_id,
-			$keys['block_border_color'],
-			$block_border_color
-		);
-
-
-		/*
-		 * Border radius.
-		 *
-		 * Empty means "use Content Block setting".
-		 */
-		$block_radius = '';
-
-		if (
-			isset(
-				$_POST['rd3_row_block_border_radius']
-			)
-		) {
-
-			$raw_radius =
-				trim(
-					wp_unslash(
-						$_POST['rd3_row_block_border_radius']
-					)
-				);
-
-			if ( '' !== $raw_radius ) {
-
-				$block_radius = absint(
-					$raw_radius
-				);
-
-				$block_radius = min(
-					$block_radius,
-					100
-				);
-
-			}
-		}
-
-		rd3_content_blocks_save_appearance_value(
-			$post_id,
-			$keys['block_radius'],
-			$block_radius
-		);
-	}
+    $value = get_post_meta(
+        $post_id,
+        $meta_key,
+        true
+    );
+
+    if ( '' === $value || null === $value ) {
+        return '';
+    }
+
+    return $value;
 }
 
-add_action(
-	'save_post',
-	'rd3_content_blocks_save_appearance',
-	10,
-	3
-);
 
+/* =========================================================
+ * SAVE / DELETE VALUE
+ * ========================================================= */
 
-/**
- * Save an appearance value or remove it when empty.
- *
- * @param int    $post_id
- * @param string $meta_key
- * @param string $value
- */
 function rd3_content_blocks_save_appearance_value(
-	$post_id,
-	$meta_key,
-	$value
+    $post_id,
+    $meta_key,
+    $value
 ) {
 
-	if ( '' === $value || null === $value ) {
+    /*
+     * Empty means:
+     *
+     * "Use inherited/default value."
+     *
+     * Delete the meta entirely so CSS inheritance
+     * and global defaults can take over.
+     */
+    if ( '' === $value || null === $value ) {
 
-		delete_post_meta(
-			$post_id,
-			$meta_key
-		);
+        delete_post_meta(
+            $post_id,
+            $meta_key
+        );
 
-		return;
-	}
+        return;
+    }
 
-	update_post_meta(
-		$post_id,
-		$meta_key,
-		$value
-	);
+    update_post_meta(
+        $post_id,
+        $meta_key,
+        $value
+    );
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| Front-End Appearance Helper
-|--------------------------------------------------------------------------
-*/
-
-/**
- * Build inline CSS custom properties for a block or row.
- *
- * The returned value is suitable for placing directly inside
- * a style="" attribute.
- *
- * @param int    $post_id
- * @param string $type block|row
- * @return string
- */
-function rd3_content_blocks_get_appearance_style(
-	$post_id,
-	$type = 'block'
-) {
-
-	$keys = rd3_content_blocks_appearance_meta_keys(
-		$type
-	);
-
-	$styles = array();
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Prefix
-	|--------------------------------------------------------------------------
-	*/
-
-	if ( 'row' === $type ) {
-
-		$prefix = 'rd3-row';
-
-	} else {
-
-		$prefix = 'rd3-block';
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Background
-	|--------------------------------------------------------------------------
-	*/
-
-	$background = get_post_meta(
-		$post_id,
-		$keys['background'],
-		true
-	);
-
-	$background = sanitize_hex_color(
-		$background
-	);
-
-	if ( $background ) {
-
-		$styles[] =
-			'--' .
-			$prefix .
-			'-background:' .
-			$background;
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Text Colour
-	|--------------------------------------------------------------------------
-	*/
-
-	$text_color = get_post_meta(
-		$post_id,
-		$keys['text_color'],
-		true
-	);
-
-	$text_color = sanitize_hex_color(
-		$text_color
-	);
-
-	if ( $text_color ) {
-
-		$styles[] =
-			'--' .
-			$prefix .
-			'-text:' .
-			$text_color;
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Border Style
-	|--------------------------------------------------------------------------
-	*/
-
-	$border_style = get_post_meta(
-		$post_id,
-		$keys['border_style'],
-		true
-	);
-
-	$allowed_styles =
-		rd3_content_blocks_appearance_border_styles();
-
-	if (
-		$border_style &&
-		array_key_exists(
-			$border_style,
-			$allowed_styles
-		)
-	) {
-
-		$styles[] =
-			'--' .
-			$prefix .
-			'-border-style:' .
-			$border_style;
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Border Width
-	|--------------------------------------------------------------------------
-	*/
-
-	$border_width = get_post_meta(
-		$post_id,
-		$keys['border_width'],
-		true
-	);
-
-	if (
-		'' !== $border_width &&
-		is_numeric( $border_width )
-	) {
-
-		$border_width = max(
-			0,
-			min(
-				50,
-				(float) $border_width
-			)
-		);
-
-		$styles[] =
-			'--' .
-			$prefix .
-			'-border-width:' .
-			$border_width .
-			'px';
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Border Colour
-	|--------------------------------------------------------------------------
-	*/
-
-	$border_color = get_post_meta(
-		$post_id,
-		$keys['border_color'],
-		true
-	);
-
-	$border_color = sanitize_hex_color(
-		$border_color
-	);
-
-	if ( $border_color ) {
-
-		$styles[] =
-			'--' .
-			$prefix .
-			'-border-color:' .
-			$border_color;
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Border Radius
-	|--------------------------------------------------------------------------
-	*/
-
-	$radius = get_post_meta(
-		$post_id,
-		$keys['radius'],
-		true
-	);
-
-	if (
-		'' !== $radius &&
-		is_numeric( $radius )
-	) {
-
-		$radius = max(
-			0,
-			min(
-				100,
-				(float) $radius
-			)
-		);
-
-		$styles[] =
-			'--' .
-			$prefix .
-			'-radius:' .
-			$radius .
-			'px';
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Row Content Block Overrides
-	|--------------------------------------------------------------------------
-	*/
-
-	if ( 'row' === $type ) {
-
-		/*
-		 * Background.
-		 */
-		$block_background = get_post_meta(
-			$post_id,
-			$keys['block_background'],
-			true
-		);
-
-		$block_background = sanitize_hex_color(
-			$block_background
-		);
-
-		if ( $block_background ) {
-
-			$styles[] =
-				'--rd3-row-block-background:' .
-				$block_background;
-		}
-
-
-		/*
-		 * Text colour.
-		 */
-		$block_text_color = get_post_meta(
-			$post_id,
-			$keys['block_text_color'],
-			true
-		);
-
-		$block_text_color = sanitize_hex_color(
-			$block_text_color
-		);
-
-		if ( $block_text_color ) {
-
-			$styles[] =
-				'--rd3-row-block-text:' .
-				$block_text_color;
-		}
-
-
-		/*
-		 * Border style.
-		 */
-		$block_border_style = get_post_meta(
-			$post_id,
-			$keys['block_border_style'],
-			true
-		);
-
-		if (
-			$block_border_style &&
-			array_key_exists(
-				$block_border_style,
-				$allowed_styles
-			)
-		) {
-
-			$styles[] =
-				'--rd3-row-block-border-style:' .
-				$block_border_style;
-		}
-
-
-		/*
-		 * Border width.
-		 */
-		$block_border_width = get_post_meta(
-			$post_id,
-			$keys['block_border_width'],
-			true
-		);
-
-		if (
-			'' !== $block_border_width &&
-			is_numeric( $block_border_width )
-		) {
-
-			$block_border_width = max(
-				0,
-				min(
-					50,
-					(float) $block_border_width
-				)
-			);
-
-			$styles[] =
-				'--rd3-row-block-border-width:' .
-				$block_border_width .
-				'px';
-		}
-
-
-		/*
-		 * Border colour.
-		 */
-		$block_border_color = get_post_meta(
-			$post_id,
-			$keys['block_border_color'],
-			true
-		);
-
-		$block_border_color = sanitize_hex_color(
-			$block_border_color
-		);
-
-		if ( $block_border_color ) {
-
-			$styles[] =
-				'--rd3-row-block-border-color:' .
-				$block_border_color;
-		}
-
-
-		/*
-		 * Border radius.
-		 */
-		$block_radius = get_post_meta(
-			$post_id,
-			$keys['block_radius'],
-			true
-		);
-
-		if (
-			'' !== $block_radius &&
-			is_numeric( $block_radius )
-		) {
-
-			$block_radius = max(
-				0,
-				min(
-					100,
-					(float) $block_radius
-				)
-			);
-
-			$styles[] =
-				'--rd3-row-block-radius:' .
-				$block_radius .
-				'px';
-		}
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Return
-	|--------------------------------------------------------------------------
-	*/
-
-	if ( empty( $styles ) ) {
-		return '';
-	}
-
-
-	return ' style="' .
-		esc_attr(
-			implode( ';', $styles ) . ';'
-		) .
-		'"';
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Admin Assets
-|--------------------------------------------------------------------------
-*/
-
-/**
- * Load appearance controls only on the relevant edit screens.
- *
- * @param string $hook
- */
-function rd3_content_blocks_appearance_admin_assets( $hook ) {
-
-	if (
-		'post.php' !== $hook &&
-		'post-new.php' !== $hook
-	) {
-		return;
-	}
-
-
-	$screen = get_current_screen();
-
-	if ( ! $screen ) {
-		return;
-	}
-
-
-	if (
-		! in_array(
-			$screen->post_type,
-			array(
-				'rd3_content_block',
-				'rd3_row',
-			),
-			true
-		)
-	) {
-		return;
-	}
-
-
-	/*
-	 * WordPress native colour picker.
-	 */
-	wp_enqueue_style(
-		'wp-color-picker'
-	);
-
-	wp_enqueue_script(
-		'wp-color-picker'
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Appearance Admin CSS
-	|--------------------------------------------------------------------------
-	*/
-
-	$admin_css = <<<'CSS'
-
-.rd3-appearance-settings {
-	padding: 4px 0 8px;
-}
-
-.rd3-appearance-settings .description {
-	margin-top: 4px;
-}
-
-.rd3-appearance-table {
-	margin-top: 12px;
-}
-
-.rd3-appearance-table th {
-	width: 180px;
-	padding-left: 0;
-}
-
-.rd3-appearance-table td {
-	padding-left: 10px;
-}
-
-.rd3-appearance-color-row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.rd3-appearance-color {
-	max-width: 120px;
-}
-
-.rd3-appearance-number {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.rd3-appearance-number input {
-	width: 90px;
-}
-
-.rd3-appearance-number span {
-	color: #646970;
-}
-
-CSS;
-
-	wp_add_inline_style(
-		'wp-color-picker',
-		$admin_css
-	);
-
-
-	/*
-	|--------------------------------------------------------------------------
-	| Appearance Admin JavaScript
-	|--------------------------------------------------------------------------
-	*/
-
-	$admin_js = <<<'JS'
-
-jQuery(function($) {
-
-	$('.rd3-appearance-color').wpColorPicker();
-
-	$('.rd3-appearance-clear').on('click', function(event) {
-
-		event.preventDefault();
-
-		var target = $(this).data('target');
-		var input  = $('#' + target);
-
-		if (!input.length) {
-			return;
-		}
-
-		input.val('');
-
-		try {
-			input.wpColorPicker('color', '');
-		} catch (error) {
-			// Leave the input cleared even if the picker API changes.
-		}
-
-		input.trigger('change');
-	});
-
-});
-
-JS;
-
-	wp_add_inline_script(
-		'wp-color-picker',
-		$admin_js
-	);
+/* =========================================================
+ * META BOXES
+ * ========================================================= */
+
+function rd3_content_blocks_add_appearance_meta_boxes() {
+
+    add_meta_box(
+        'rd3-content-block-appearance',
+        'Appearance',
+        'rd3_content_blocks_render_appearance_meta_box',
+        'rd3_content_block',
+        'normal',
+        'default'
+    );
+
+    add_meta_box(
+        'rd3-row-appearance',
+        'Appearance',
+        'rd3_content_blocks_render_appearance_meta_box',
+        'rd3_row',
+        'normal',
+        'default'
+    );
 }
 
 add_action(
-	'admin_enqueue_scripts',
-	'rd3_content_blocks_appearance_admin_assets'
+    'add_meta_boxes',
+    'rd3_content_blocks_add_appearance_meta_boxes'
 );
+
+
+/* =========================================================
+ * COLOUR FIELD
+ * ========================================================= */
+
+function rd3_content_blocks_render_appearance_colour(
+    $label,
+    $name,
+    $value,
+    $description = ''
+) {
+    ?>
+
+    <tr>
+
+        <th scope="row">
+
+            <label for="<?php echo esc_attr( $name ); ?>">
+
+                <?php echo esc_html( $label ); ?>
+
+            </label>
+
+        </th>
+
+        <td>
+
+            <input
+                type="text"
+                id="<?php echo esc_attr( $name ); ?>"
+                name="<?php echo esc_attr( $name ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                class="rd3-appearance-color"
+                data-default-color=""
+            />
+
+            <?php if ( '' !== $value ) : ?>
+
+                <button
+                    type="button"
+                    class="button rd3-appearance-clear-color"
+                    data-target="<?php echo esc_attr( $name ); ?>"
+                >
+                    Clear
+                </button>
+
+            <?php endif; ?>
+
+            <?php if ( $description ) : ?>
+
+                <p class="description">
+                    <?php echo esc_html( $description ); ?>
+                </p>
+
+            <?php else : ?>
+
+                <p class="description">
+                    Clear to use the default.
+                </p>
+
+            <?php endif; ?>
+
+        </td>
+
+    </tr>
+
+    <?php
+}
+
+
+/* =========================================================
+ * BORDER STYLE
+ * ========================================================= */
+
+function rd3_content_blocks_render_appearance_border_style(
+    $name,
+    $value,
+    $allow_default = true
+) {
+
+    $styles =
+        rd3_content_blocks_appearance_border_styles();
+    ?>
+
+    <tr>
+
+        <th scope="row">
+
+            <label for="<?php echo esc_attr( $name ); ?>">
+
+                Border style
+
+            </label>
+
+        </th>
+
+        <td>
+
+            <select
+                id="<?php echo esc_attr( $name ); ?>"
+                name="<?php echo esc_attr( $name ); ?>"
+            >
+
+                <?php if ( $allow_default ) : ?>
+
+                    <option
+                        value=""
+                        <?php selected( $value, '' ); ?>
+                    >
+                        Use default
+                    </option>
+
+                <?php endif; ?>
+
+                <?php foreach ( $styles as $style => $label ) : ?>
+
+                    <option
+                        value="<?php echo esc_attr( $style ); ?>"
+                        <?php selected( $value, $style ); ?>
+                    >
+                        <?php echo esc_html( $label ); ?>
+                    </option>
+
+                <?php endforeach; ?>
+
+            </select>
+
+        </td>
+
+    </tr>
+
+    <?php
+}
+
+
+/* =========================================================
+ * NUMBER FIELD
+ * ========================================================= */
+
+function rd3_content_blocks_render_appearance_number(
+    $label,
+    $name,
+    $value,
+    $min,
+    $max,
+    $unit = 'px',
+    $allow_default = true
+) {
+    ?>
+
+    <tr>
+
+        <th scope="row">
+
+            <label for="<?php echo esc_attr( $name ); ?>">
+
+                <?php echo esc_html( $label ); ?>
+
+            </label>
+
+        </th>
+
+        <td>
+
+            <input
+                type="number"
+                id="<?php echo esc_attr( $name ); ?>"
+                name="<?php echo esc_attr( $name ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                min="<?php echo esc_attr( $min ); ?>"
+                max="<?php echo esc_attr( $max ); ?>"
+                step="1"
+                style="width:100px;"
+            />
+
+            <?php if ( $allow_default && '' === $value ) : ?>
+
+                <span class="description">
+                    Use default
+                </span>
+
+            <?php else : ?>
+
+                <span class="description">
+                    <?php echo esc_html( $unit ); ?>
+                </span>
+
+            <?php endif; ?>
+
+        </td>
+
+    </tr>
+
+    <?php
+}
+
+
+/* =========================================================
+ * STANDARD APPEARANCE FIELDS
+ * ========================================================= */
+
+function rd3_content_blocks_render_standard_appearance_fields(
+    $post_id,
+    $type
+) {
+
+    $keys =
+        rd3_content_blocks_appearance_meta_keys(
+            $type
+        );
+
+    $background =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['background']
+        );
+
+    $text_color =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['text_color']
+        );
+
+    $border_style =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['border_style']
+        );
+
+    $border_width =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['border_width']
+        );
+
+    $border_color =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['border_color']
+        );
+
+    $radius =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['radius']
+        );
+    ?>
+
+    <table class="form-table">
+
+        <?php
+
+        rd3_content_blocks_render_appearance_colour(
+            'Background colour',
+            'rd3_appearance_background',
+            $background
+        );
+
+        rd3_content_blocks_render_appearance_colour(
+            'Text colour',
+            'rd3_appearance_text_color',
+            $text_color
+        );
+
+        rd3_content_blocks_render_appearance_border_style(
+            'rd3_appearance_border_style',
+            $border_style,
+            true
+        );
+
+        rd3_content_blocks_render_appearance_number(
+            'Border thickness',
+            'rd3_appearance_border_width',
+            $border_width,
+            0,
+            50,
+            'px',
+            true
+        );
+
+        rd3_content_blocks_render_appearance_colour(
+            'Border colour',
+            'rd3_appearance_border_color',
+            $border_color
+        );
+
+        rd3_content_blocks_render_appearance_number(
+            'Border radius',
+            'rd3_appearance_radius',
+            $radius,
+            0,
+            100,
+            'px',
+            true
+        );
+
+        ?>
+
+    </table>
+
+    <?php
+}
+
+
+/* =========================================================
+ * ROW CONTENT BLOCK OVERRIDES
+ * ========================================================= */
+
+function rd3_content_blocks_render_row_block_overrides(
+    $post_id
+) {
+
+    $keys =
+        rd3_content_blocks_appearance_meta_keys(
+            'row'
+        );
+
+    $background =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['block_background']
+        );
+
+    $text_color =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['block_text_color']
+        );
+
+    $border_style =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['block_border_style']
+        );
+
+    $border_width =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['block_border_width']
+        );
+
+    $border_color =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['block_border_color']
+        );
+
+    $radius =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $keys['block_radius']
+        );
+    ?>
+
+    <hr>
+
+    <h3>
+        Content Block Overrides
+    </h3>
+
+    <p>
+        These settings override the appearance of Content Blocks
+        inside this Row. Clear a setting to use the Content Block's
+        own setting or the global default.
+    </p>
+
+    <table class="form-table">
+
+        <?php
+
+        rd3_content_blocks_render_appearance_colour(
+            'Background colour',
+            'rd3_row_block_background',
+            $background,
+            'Clear to use the Content Block setting or global default.'
+        );
+
+        rd3_content_blocks_render_appearance_colour(
+            'Text colour',
+            'rd3_row_block_text_color',
+            $text_color,
+            'Clear to use the Content Block setting or global default.'
+        );
+
+        rd3_content_blocks_render_appearance_border_style(
+            'rd3_row_block_border_style',
+            $border_style,
+            true
+        );
+
+        rd3_content_blocks_render_appearance_number(
+            'Border thickness',
+            'rd3_row_block_border_width',
+            $border_width,
+            0,
+            50,
+            'px',
+            true
+        );
+
+        rd3_content_blocks_render_appearance_colour(
+            'Border colour',
+            'rd3_row_block_border_color',
+            $border_color,
+            'Clear to use the Content Block setting or global default.'
+        );
+
+        rd3_content_blocks_render_appearance_number(
+            'Border radius',
+            'rd3_row_block_radius',
+            $radius,
+            0,
+            100,
+            'px',
+            true
+        );
+
+        ?>
+
+    </table>
+
+    <?php
+}
+
+
+/* =========================================================
+ * META BOX RENDER
+ * ========================================================= */
+
+function rd3_content_blocks_render_appearance_meta_box(
+    $post
+) {
+
+    wp_nonce_field(
+        'rd3_content_blocks_save_appearance',
+        'rd3_content_blocks_appearance_nonce'
+    );
+
+    ?>
+
+    <div class="rd3-content-blocks-appearance">
+
+        <?php
+
+        $type =
+            'rd3_row' === $post->post_type
+            ? 'row'
+            : 'block';
+
+        rd3_content_blocks_render_standard_appearance_fields(
+            $post->ID,
+            $type
+        );
+
+        if ( 'row' === $type ) {
+
+            rd3_content_blocks_render_row_block_overrides(
+                $post->ID
+            );
+        }
+
+        ?>
+
+    </div>
+
+    <?php
+}
+
+
+/* =========================================================
+ * SAVE APPEARANCE
+ * ========================================================= */
+
+function rd3_content_blocks_save_appearance(
+    $post_id
+) {
+
+    $post_type = get_post_type(
+        $post_id
+    );
+
+    if (
+        'rd3_content_block' !== $post_type &&
+        'rd3_row' !== $post_type
+    ) {
+        return;
+    }
+
+
+    if (
+        defined( 'DOING_AUTOSAVE' ) &&
+        DOING_AUTOSAVE
+    ) {
+        return;
+    }
+
+
+    if (
+        wp_is_post_revision(
+            $post_id
+        )
+    ) {
+        return;
+    }
+
+
+    if (
+        ! current_user_can(
+            'edit_post',
+            $post_id
+        )
+    ) {
+        return;
+    }
+
+
+    if (
+        ! isset(
+            $_POST['rd3_content_blocks_appearance_nonce']
+        )
+    ) {
+        return;
+    }
+
+
+    if (
+        ! wp_verify_nonce(
+            sanitize_text_field(
+                wp_unslash(
+                    $_POST[
+                        'rd3_content_blocks_appearance_nonce'
+                    ]
+                )
+            ),
+            'rd3_content_blocks_save_appearance'
+        )
+    ) {
+        return;
+    }
+
+
+    $type =
+        'rd3_row' === $post_type
+        ? 'row'
+        : 'block';
+
+    $keys =
+        rd3_content_blocks_appearance_meta_keys(
+            $type
+        );
+
+
+    /* =====================================================
+     * BACKGROUND
+     * ===================================================== */
+
+    $background = '';
+
+    if (
+        isset(
+            $_POST['rd3_appearance_background']
+        )
+    ) {
+
+        $background =
+            sanitize_hex_color(
+                wp_unslash(
+                    $_POST[
+                        'rd3_appearance_background'
+                    ]
+                )
+            );
+
+        if ( ! $background ) {
+            $background = '';
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['background'],
+        $background
+    );
+
+
+    /* =====================================================
+     * TEXT COLOUR
+     * ===================================================== */
+
+    $text_color = '';
+
+    if (
+        isset(
+            $_POST['rd3_appearance_text_color']
+        )
+    ) {
+
+        $text_color =
+            sanitize_hex_color(
+                wp_unslash(
+                    $_POST[
+                        'rd3_appearance_text_color'
+                    ]
+                )
+            );
+
+        if ( ! $text_color ) {
+            $text_color = '';
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['text_color'],
+        $text_color
+    );
+
+
+    /* =====================================================
+     * BORDER STYLE
+     * ===================================================== */
+
+    $border_style = '';
+
+    if (
+        isset(
+            $_POST['rd3_appearance_border_style']
+        )
+    ) {
+
+        $border_style =
+            sanitize_key(
+                wp_unslash(
+                    $_POST[
+                        'rd3_appearance_border_style'
+                    ]
+                )
+            );
+
+        $allowed_styles =
+            rd3_content_blocks_appearance_border_styles();
+
+        if (
+            ! isset(
+                $allowed_styles[
+                    $border_style
+                ]
+            )
+        ) {
+            $border_style = '';
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['border_style'],
+        $border_style
+    );
+
+
+    /* =====================================================
+     * BORDER WIDTH
+     * ===================================================== */
+
+    $border_width = '';
+
+    if (
+        isset(
+            $_POST['rd3_appearance_border_width']
+        )
+    ) {
+
+        $raw_width =
+            trim(
+                wp_unslash(
+                    $_POST[
+                        'rd3_appearance_border_width'
+                    ]
+                )
+            );
+
+        if ( '' !== $raw_width ) {
+
+            $border_width =
+                absint(
+                    $raw_width
+                );
+
+            $border_width =
+                min(
+                    50,
+                    $border_width
+                );
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['border_width'],
+        $border_width
+    );
+
+
+    /* =====================================================
+     * BORDER COLOUR
+     * ===================================================== */
+
+    $border_color = '';
+
+    if (
+        isset(
+            $_POST['rd3_appearance_border_color']
+        )
+    ) {
+
+        $border_color =
+            sanitize_hex_color(
+                wp_unslash(
+                    $_POST[
+                        'rd3_appearance_border_color'
+                    ]
+                )
+            );
+
+        if ( ! $border_color ) {
+            $border_color = '';
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['border_color'],
+        $border_color
+    );
+
+
+    /* =====================================================
+     * BORDER RADIUS
+     * ===================================================== */
+
+    $radius = '';
+
+    if (
+        isset(
+            $_POST['rd3_appearance_radius']
+        )
+    ) {
+
+        $raw_radius =
+            trim(
+                wp_unslash(
+                    $_POST[
+                        'rd3_appearance_radius'
+                    ]
+                )
+            );
+
+        if ( '' !== $raw_radius ) {
+
+            $radius =
+                absint(
+                    $raw_radius
+                );
+
+            $radius =
+                min(
+                    100,
+                    $radius
+                );
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['radius'],
+        $radius
+    );
+
+
+    /* =====================================================
+     * ROW CONTENT BLOCK OVERRIDES
+     * ===================================================== */
+
+    if ( 'row' !== $type ) {
+        return;
+    }
+
+
+    /* Background override. */
+
+    $value = '';
+
+    if (
+        isset(
+            $_POST['rd3_row_block_background']
+        )
+    ) {
+
+        $value =
+            sanitize_hex_color(
+                wp_unslash(
+                    $_POST[
+                        'rd3_row_block_background'
+                    ]
+                )
+            );
+
+        if ( ! $value ) {
+            $value = '';
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['block_background'],
+        $value
+    );
+
+
+    /* Text colour override. */
+
+    $value = '';
+
+    if (
+        isset(
+            $_POST['rd3_row_block_text_color']
+        )
+    ) {
+
+        $value =
+            sanitize_hex_color(
+                wp_unslash(
+                    $_POST[
+                        'rd3_row_block_text_color'
+                    ]
+                )
+            );
+
+        if ( ! $value ) {
+            $value = '';
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['block_text_color'],
+        $value
+    );
+
+
+    /* Border style override. */
+
+    $value = '';
+
+    if (
+        isset(
+            $_POST['rd3_row_block_border_style']
+        )
+    ) {
+
+        $value =
+            sanitize_key(
+                wp_unslash(
+                    $_POST[
+                        'rd3_row_block_border_style'
+                    ]
+                )
+            );
+
+        $allowed_styles =
+            rd3_content_blocks_appearance_border_styles();
+
+        if (
+            ! isset(
+                $allowed_styles[
+                    $value
+                ]
+            )
+        ) {
+            $value = '';
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['block_border_style'],
+        $value
+    );
+
+
+    /* Border width override. */
+
+    $value = '';
+
+    if (
+        isset(
+            $_POST['rd3_row_block_border_width']
+        )
+    ) {
+
+        $raw_value =
+            trim(
+                wp_unslash(
+                    $_POST[
+                        'rd3_row_block_border_width'
+                    ]
+                )
+            );
+
+        if ( '' !== $raw_value ) {
+
+            $value =
+                absint(
+                    $raw_value
+                );
+
+            $value =
+                min(
+                    50,
+                    $value
+                );
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['block_border_width'],
+        $value
+    );
+
+
+    /* Border colour override. */
+
+    $value = '';
+
+    if (
+        isset(
+            $_POST['rd3_row_block_border_color']
+        )
+    ) {
+
+        $value =
+            sanitize_hex_color(
+                wp_unslash(
+                    $_POST[
+                        'rd3_row_block_border_color'
+                    ]
+                )
+            );
+
+        if ( ! $value ) {
+            $value = '';
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['block_border_color'],
+        $value
+    );
+
+
+    /* Radius override. */
+
+    $value = '';
+
+    if (
+        isset(
+            $_POST['rd3_row_block_radius']
+        )
+    ) {
+
+        $raw_value =
+            trim(
+                wp_unslash(
+                    $_POST[
+                        'rd3_row_block_radius'
+                    ]
+                )
+            );
+
+        if ( '' !== $raw_value ) {
+
+            $value =
+                absint(
+                    $raw_value
+                );
+
+            $value =
+                min(
+                    100,
+                    $value
+                );
+        }
+    }
+
+    rd3_content_blocks_save_appearance_value(
+        $post_id,
+        $keys['block_radius'],
+        $value
+    );
+}
+
+add_action(
+    'save_post',
+    'rd3_content_blocks_save_appearance'
+);
+
+
+/* =========================================================
+ * RESOLVE APPEARANCE VALUE
+ * ========================================================= */
+
+function rd3_content_blocks_resolve_appearance_value(
+    $post_id,
+    $meta_key,
+    $type,
+    $setting
+) {
+
+    $value =
+        rd3_content_blocks_get_appearance_meta_value(
+            $post_id,
+            $meta_key
+        );
+
+    if ( '' !== $value ) {
+        return $value;
+    }
+
+    return
+        rd3_content_blocks_get_global_appearance_default(
+            $type,
+            $setting
+        );
+}
+
+
+/* =========================================================
+ * FRONT-END CSS VARIABLES
+ * ========================================================= */
+
+function rd3_content_blocks_get_appearance_style(
+    $post_id,
+    $type
+) {
+
+    $keys =
+        rd3_content_blocks_appearance_meta_keys(
+            $type
+        );
+
+    $styles = array();
+
+    $prefix =
+        'row' === $type
+        ? 'row'
+        : 'block';
+
+
+    /* =====================================================
+     * BACKGROUND
+     * ===================================================== */
+
+    $background =
+        rd3_content_blocks_resolve_appearance_value(
+            $post_id,
+            $keys['background'],
+            $type,
+            'background'
+        );
+
+    if ( '' !== $background ) {
+
+        $styles[] =
+            '--rd3-' .
+            $prefix .
+            '-background:' .
+            $background;
+    }
+
+
+    /* =====================================================
+     * TEXT
+     * ===================================================== */
+
+    $text_color =
+        rd3_content_blocks_resolve_appearance_value(
+            $post_id,
+            $keys['text_color'],
+            $type,
+            'text_color'
+        );
+
+    if ( '' !== $text_color ) {
+
+        $styles[] =
+            '--rd3-' .
+            $prefix .
+            '-text:' .
+            $text_color;
+    }
+
+
+    /* =====================================================
+     * BORDER STYLE
+     * ===================================================== */
+
+    $border_style =
+        rd3_content_blocks_resolve_appearance_value(
+            $post_id,
+            $keys['border_style'],
+            $type,
+            'border_style'
+        );
+
+    if ( '' !== $border_style ) {
+
+        $styles[] =
+            '--rd3-' .
+            $prefix .
+            '-border-style:' .
+            $border_style;
+    }
+
+
+    /* =====================================================
+     * BORDER WIDTH
+     * ===================================================== */
+
+    $border_width =
+        rd3_content_blocks_resolve_appearance_value(
+            $post_id,
+            $keys['border_width'],
+            $type,
+            'border_width'
+        );
+
+    if ( '' !== $border_width ) {
+
+        $styles[] =
+            '--rd3-' .
+            $prefix .
+            '-border-width:' .
+            absint( $border_width ) .
+            'px';
+    }
+
+
+    /* =====================================================
+     * BORDER COLOUR
+     * ===================================================== */
+
+    $border_color =
+        rd3_content_blocks_resolve_appearance_value(
+            $post_id,
+            $keys['border_color'],
+            $type,
+            'border_color'
+        );
+
+    if ( '' !== $border_color ) {
+
+        $styles[] =
+            '--rd3-' .
+            $prefix .
+            '-border-color:' .
+            $border_color;
+    }
+
+
+    /* =====================================================
+     * RADIUS
+     * ===================================================== */
+
+    $radius =
+        rd3_content_blocks_resolve_appearance_value(
+            $post_id,
+            $keys['radius'],
+            $type,
+            'radius'
+        );
+
+    if ( '' !== $radius ) {
+
+        $styles[] =
+            '--rd3-' .
+            $prefix .
+            '-radius:' .
+            absint( $radius ) .
+            'px';
+    }
+
+
+    /* =====================================================
+     * ROW CONTENT BLOCK OVERRIDES
+     * ===================================================== */
+
+    if ( 'row' === $type ) {
+
+        /*
+         * IMPORTANT:
+         *
+         * Only output an override variable when an
+         * actual Row override exists.
+         *
+         * If it is empty, the Content Block variable
+         * underneath remains active.
+         */
+
+
+        $override_background =
+            rd3_content_blocks_get_appearance_meta_value(
+                $post_id,
+                $keys['block_background']
+            );
+
+        if ( '' !== $override_background ) {
+
+            $styles[] =
+                '--rd3-row-block-background:' .
+                $override_background;
+        }
+
+
+        $override_text =
+            rd3_content_blocks_get_appearance_meta_value(
+                $post_id,
+                $keys['block_text_color']
+            );
+
+        if ( '' !== $override_text ) {
+
+            $styles[] =
+                '--rd3-row-block-text:' .
+                $override_text;
+        }
+
+
+        $override_border_style =
+            rd3_content_blocks_get_appearance_meta_value(
+                $post_id,
+                $keys['block_border_style']
+            );
+
+        if ( '' !== $override_border_style ) {
+
+            $styles[] =
+                '--rd3-row-block-border-style:' .
+                $override_border_style;
+        }
+
+
+        $override_border_width =
+            rd3_content_blocks_get_appearance_meta_value(
+                $post_id,
+                $keys['block_border_width']
+            );
+
+        if ( '' !== $override_border_width ) {
+
+            $styles[] =
+                '--rd3-row-block-border-width:' .
+                absint(
+                    $override_border_width
+                ) .
+                'px';
+        }
+
+
+        $override_border_color =
+            rd3_content_blocks_get_appearance_meta_value(
+                $post_id,
+                $keys['block_border_color']
+            );
+
+        if ( '' !== $override_border_color ) {
+
+            $styles[] =
+                '--rd3-row-block-border-color:' .
+                $override_border_color;
+        }
+
+
+        $override_radius =
+            rd3_content_blocks_get_appearance_meta_value(
+                $post_id,
+                $keys['block_radius']
+            );
+
+        if ( '' !== $override_radius ) {
+
+            $styles[] =
+                '--rd3-row-block-radius:' .
+                absint(
+                    $override_radius
+                ) .
+                'px';
+        }
+    }
+
+
+    if ( empty( $styles ) ) {
+        return '';
+    }
+
+
+    return ' style="' .
+        esc_attr(
+            implode( ';', $styles )
+        ) .
+        ';"';
+}
+
+
+/* =========================================================
+ * ADMIN ASSETS
+ * ========================================================= */
+
+function rd3_content_blocks_appearance_admin_assets(
+    $hook
+) {
+
+    if (
+        ! in_array(
+            $hook,
+            array(
+                'post.php',
+                'post-new.php',
+            ),
+            true
+        )
+    ) {
+        return;
+    }
+
+
+    /*
+     * Get the current post type.
+     */
+    $post_type = '';
+
+
+    if ( isset( $_GET['post'] ) ) {
+
+        $post_id =
+            absint(
+                $_GET['post']
+            );
+
+        if ( $post_id ) {
+
+            $post_type =
+                get_post_type(
+                    $post_id
+                );
+        }
+    }
+
+
+    if ( ! $post_type && isset( $_GET['post_type'] ) ) {
+
+        $post_type =
+            sanitize_key(
+                wp_unslash(
+                    $_GET['post_type']
+                )
+            );
+    }
+
+
+    if (
+        ! in_array(
+            $post_type,
+            array(
+                'rd3_content_block',
+                'rd3_row',
+            ),
+            true
+        )
+    ) {
+        return;
+    }
+
+
+    /*
+     * Native WordPress colour picker.
+     */
+    wp_enqueue_style(
+        'wp-color-picker'
+    );
+
+    wp_enqueue_script(
+        'wp-color-picker'
+    );
+
+
+    /*
+     * Admin styling.
+     */
+    wp_add_inline_style(
+        'wp-color-picker',
+        '
+        .rd3-content-blocks-appearance {
+            max-width: 900px;
+        }
+
+        .rd3-content-blocks-appearance hr {
+            margin: 30px 0;
+        }
+
+        .rd3-content-blocks-appearance h3 {
+            margin-bottom: 8px;
+        }
+
+        .rd3-content-blocks-appearance
+        .form-table th {
+            width: 220px;
+        }
+
+        .rd3-content-blocks-appearance
+        .description {
+            margin-top: 6px;
+        }
+
+        .rd3-appearance-clear-color {
+            margin-left: 6px !important;
+        }
+        '
+    );
+
+
+    /*
+     * Initialise WordPress colour pickers.
+     */
+    wp_add_inline_script(
+        'wp-color-picker',
+        "
+        jQuery(document).ready(function($) {
+
+            $('.rd3-appearance-color').wpColorPicker();
+
+            $(document).on(
+                'click',
+                '.rd3-appearance-clear-color',
+                function(event) {
+
+                    event.preventDefault();
+
+                    var target = $(this).data('target');
+                    var input  = $('#' + target);
+
+                    input.val('');
+
+                    input.wpColorPicker(
+                        'color',
+                        ''
+                    );
+
+                    input
+                        .closest('.wp-picker-container')
+                        .find('.wp-color-result')
+                        .css('background-color', '');
+
+                    input.trigger('change');
+
+                }
+            );
+
+        });
+        "
+    );
+}
+
+add_action(
+    'admin_enqueue_scripts',
+    'rd3_content_blocks_appearance_admin_assets'
+);
+

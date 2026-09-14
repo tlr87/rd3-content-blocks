@@ -26,6 +26,7 @@ require_once plugin_dir_path( __FILE__ ) . 'help.php';
 require_once plugin_dir_path( __FILE__ ) . 'usage.php';
 require_once plugin_dir_path( __FILE__ ) . 'sort.php';
 require_once plugin_dir_path( __FILE__ ) . 'appearance.php';
+require_once plugin_dir_path( __FILE__ ) . 'appearance-defaults.php';
 
 /*
  * =========================================================
@@ -52,6 +53,15 @@ function rd3_content_blocks_admin_menu() {
         'manage_options',
         'rd3-content-blocks-usage',
         'rd3_content_blocks_usage_page'
+    );
+
+      add_submenu_page(
+        'rd3-content-blocks',
+        'Appearance Defaults',
+        'Appearance Defaults',
+        'manage_options',
+        'rd3-content-blocks-appearance-defaults',
+        'rd3_content_blocks_render_appearance_defaults_page'
     );
 }
 
@@ -145,6 +155,7 @@ function rd3_content_blocks_editor_sidebar_html( $post ) {
             'order'          => 'ASC',
         )
     );
+
 
     ?>
 
