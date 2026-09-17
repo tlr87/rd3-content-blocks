@@ -7,6 +7,113 @@
  */
 
 
+
+/*
+
+RD3 Content Blocks
+Row Layout
+
+
+IMPORTANT — READ BEFORE EDITING
+
+
+This CSS is designed around the current RD3 Content Blocks HTML structure.
+
+
+Layout rules:
+
+
+Use CSS Grid for the main row/layout.
+
+
+Use Subgrid only when nested elements need to share
+and align with the parent's grid tracks.
+
+
+Use Flexbox for simple internal card layout and spacing.
+
+
+DO NOT assume that every child element can use grid-row,
+grid-column, or subgrid. These properties only work when
+the element is participating in the appropriate grid.
+
+
+The current card structure is:
+
+
+
+
+
+
+Content Row
+
+
+
+
+└── Row Item
+
+
+
+
+    └── Content Block
+
+
+
+
+        ├── Title
+
+
+
+
+        ├── Content
+
+
+
+
+        │   ├── Heading / Text
+
+
+
+
+        │   └── List
+
+
+
+
+        └── Link
+
+
+The Heading and List are INSIDE .rd3-content-block-content.
+They are not direct children of .rd3-content-block.
+
+
+If the HTML structure is changed, review the Grid/Subgrid
+rules before changing this CSS.
+
+
+In particular:
+
+
+Do not add grid-row/grid-column rules to elements that
+are not grid items.
+
+
+Do not use selectors for h4 if the content uses h5.
+
+
+Do not introduce Subgrid simply to align content vertically.
+
+
+If the requirement is simply equal-height cards with the
+link at the bottom, use Flexbox.
+
+
+Keep the HTML structure and CSS layout model in sync.
+*/
+
+
+
+
 /* --------------------------------
  * Base Row
  * -------------------------------- */
@@ -95,97 +202,57 @@
     width: 100%;
 }
 
-
 /* --------------------------------
  * Aligned Cards
  * -------------------------------- */
 
 .rd3-content-row.rd3-row-aligned {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-
-    /*
-     * Shared tracks:
-     * 1 = title
-     * 2 = intro
-     * 3 = second heading
-     * 4 = list
-     * 5 = explore link
-     */
-
-    grid-template-rows: auto auto auto auto auto;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     align-items: stretch;
 }
 
 .rd3-content-row.rd3-row-aligned .rd3-content-row-item {
-    display: grid;
-    grid-template-rows: subgrid;
-    grid-row: span 5;
+    display: flex;
     min-width: 0;
 }
 
 .rd3-content-row.rd3-row-aligned .rd3-content-block {
-    display: grid;
-    grid-template-rows: subgrid;
-    grid-row: span 5;
-    height: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     margin: 0;
-    padding: 5%;
+    padding: 2%;
     box-sizing: border-box;
 }
 
 .rd3-content-row.rd3-row-aligned .rd3-content-block-title {
-    grid-row: 1;
     margin: 0 0 16px 0;
 }
 
 .rd3-content-row.rd3-row-aligned .rd3-content-block-content {
-    display: block;
-    grid-template-rows: subgrid;
-    grid-row: 2 / span 3;
-    margin: 20px 0 0 0;
+    flex: 1 1 auto;
+    margin: 0;
     padding: 0;
 }
 
-.rd3-content-row.rd3-row-aligned .rd3-content-block-content > * {
-    display: block;
-    grid-row: auto;
-    grid-column: auto;
-}
-
-
-/* First heading + paragraph stay in normal flow */
-
-.rd3-content-row.rd3-row-aligned .rd3-content-block-content h4:first-of-type,
-.rd3-content-row.rd3-row-aligned .rd3-content-block-content p:first-of-type {
-    grid-row: auto;
-    grid-column: 1;
-}
-
-
-/* Second heading and list stay aligned */
-
-.rd3-content-row.rd3-row-aligned .rd3-content-block-content h4:nth-of-type(2) {
-    grid-row: 2;
-    grid-column: 1;
+.rd3-content-row.rd3-row-aligned .rd3-content-block-content h5 {
+    margin-top: 0;
 }
 
 .rd3-content-row.rd3-row-aligned .rd3-content-block-content ul {
-    grid-row: 3;
-    grid-column: 1;
-    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .rd3-content-row.rd3-row-aligned .rd3-content-block-link {
-    grid-row: 5;
-    margin-top: 0;
-    padding: 20px 0 0 0;
+    margin-top: auto;
+    padding-top: 20px;
 }
 
 .rd3-content-row.rd3-row-aligned .rd3-content-block-edit {
-    grid-row: auto;
-    margin-top: 60px;
+    margin-top: 20px;
 }
 
 

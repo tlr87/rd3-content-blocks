@@ -859,9 +859,9 @@ function rd3_content_blocks_render_appearance_defaults_section(
 
     <div class="rd3-appearance-defaults-section">
 
-        <h2>
+        <h3>
             <?php echo esc_html( $title ); ?>
-        </h2>
+        </h3>
 
         <p class="rd3-appearance-defaults-description">
             <?php echo esc_html( $description ); ?>
